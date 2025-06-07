@@ -7,18 +7,47 @@ Este proyecto es una herramienta en línea para resolver problemas de programaci
 
 ## Estructura del Proyecto
 
-- **.gitignore**: Archivos y directorios que deben ser ignorados por Git.
-- **README.md**: Documentación del proyecto.
-- **requirements.txt**: Lista de paquetes de Python requeridos.
-- **manage.py**: Utilidad de línea de comandos para interactuar con el proyecto Django.
-- **.env**: Variables de entorno para la configuración del proyecto.
-- **docker-compose.yml**: Archivo opcional para levantar el entorno con Docker (a Future XD).
-- **lineal_solver/**: Configuración principal de Django.
-- **apps/**: Contiene las aplicaciones del proyecto.
-  - **metodo_simplex/**: Aplicación para resolver problemas con el método simplex.
-  - **metodo_grafico/**: Aplicación para resolver problemas cone el metodo grafico.
-- **templates/**: Plantillas HTML globales para el proyecto.
-- **static/**: Archivos estáticos globales para el proyecto.
+```
+lineal_solver/
+├── .gitignore                  # Archivos y carpetas ignorados por Git
+├── README.md                   # Documentación del proyecto
+├── requirements.txt            # Lista de paquetes de Python requeridos
+├── manage.py                   # Utilidad de línea de comandos para Django
+├── .env                        # Variables de entorno para la configuración
+├── docker-compose.yml          # (Opcional) Para levantar el entorno con Docker
+├── lineal_solver/              # Configuración principal de Django
+│   ├── __init__.py
+│   ├── asgi.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+├── apps/                       # Contiene las aplicaciones del proyecto
+│   ├── metodo_simplex/         # Aplicación para resolver con método símplex
+│   │   ├── migrations/
+│   │   │   └── __init__.py
+│   │   ├── templates/
+│   │   ├── static/
+│   │   ├── models.py
+│   │   ├── views.py
+│   │   ├── urls.py
+│   │   ├── forms.py
+│   │   └── simplex_solver.py
+│   └── metodo_grafico/         # Aplicación para resolver gráficamente
+│       ├── migrations/
+│       │   └── __init__.py
+│       ├── templates/
+│       ├── static/
+│       ├── models.py
+│       ├── views.py
+│       ├── urls.py
+│       ├── forms.py
+│       └── grafico_solver.py
+├── templates/                  # Plantillas HTML globales para el proyecto
+│   └── base.html
+├── static/                     # Archivos estáticos globales
+│   ├── css/
+│   └── js/
+```
 
 ## Instalación
 

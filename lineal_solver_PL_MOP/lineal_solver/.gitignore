@@ -1,0 +1,27 @@
+# Entorno virtual
+venv/
+source/
+
+# Archivos de configuración sensibles
+.env
+
+# Archivos de bases de datos locales
+*.sqlite3
+
+# Archivos de migraciones de Django (opcional, si quieres ignorar archivos pyc)
+**/migrations/*.pyc
+**/migrations/__pycache__/
+
+# Archivos de Python compilados
+__pycache__/
+*.py[cod]
+
+# Archivos de logs
+*.log
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de configuración de VSCode
+.vscode/

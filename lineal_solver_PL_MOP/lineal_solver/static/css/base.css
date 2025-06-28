@@ -1,0 +1,28 @@
+@import url('variables.css');
+
+.navbar-custom {
+    background-color: var(--color-primario) !important;
+}
+
+.navbar-custom .navbar-link, 
+.navbar-custom .navbar-brand {
+    color: var(--color-negro) !important;
+}
+
+.navbar-custom .navbar-brand:hover, .navbar-custom .nav-link:hover {
+    color: var(--color-blanco) !important;
+}
+
+.footer-custom {
+    background-color: var(--color-primario) !important;
+    color: var(--color-negro) !important;
+}
+
+.footer-custom a {
+    color: var(--color-negro) !important;
+    text-decoration: none;
+}
+
+.footer-custom a:hover {
+    color: var(--color-blanco) !important;
+}

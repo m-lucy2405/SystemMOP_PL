@@ -1,147 +1,123 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>Método Símplex</title>
-    {% load static %}
-    <style>
-        /* ---------- estilos ---------- */
-        .artificial      { background:#ffeeee;padding:8px;margin:5px 0;border-left:3px solid #f00; }
-        .pivot-cell      { background:#fffacd;font-weight:bold; }
-        .error-box       { background:#ffebee;padding:15px;border-radius:5px;margin:15px 0; }
-        table            { border-collapse:collapse;margin:15px 0; }
-        th,td            { border:1px solid #ddd;padding:8px;text-align:center; }
-        th               { background:#f2f2f2; }
-    </style>
+{% extends "base.html" %}
 
-    <script>
-        /* ========= genera inputs de la FO y restricciones ========= */
-        function generarCampos () {
-            const n = +document.getElementById('n').value,
-                  m = +document.getElementById('m').value;
-            let html = '<h3>Función objetivo</h3>';
-            for (let i = 1; i <= n; i++)
-                html += `<input name="obj${i}" type="number" step="any" required> x<sub>${i}</sub> `;
-            html += '<h3>Restricciones</h3>';
-            for (let j = 1; j <= m; j++) {
-                for (let i = 1; i <= n; i++)
-                    html += `<input name="cons${j}_${i}" type="number" step="any" required> x<sub>${i}</sub> `;
-                html += `<select name="type${j}">
-                            <option value="<=">≤</option>
-                            <option value=">=">≥</option>
-                            <option value="=">=</option>
-                         </select>
-                         <input name="rhs${j}" type="number" step="any" required><br>`;
-            }
-            document.getElementById('campos').innerHTML = html;
-        }
+{% load static %}
 
-        /* ========= limpia todo el formulario y la sección de resultados ========= */
-        function limpiarFormulario () {
-            document.querySelector('form').reset();
-            document.getElementById('campos').innerHTML = '';
-            const res = document.getElementById('resultado-wrapper');
-            if (res) res.remove();
-            window.scrollTo({ top:0, behavior:'smooth' });
-        }
+{% block title %}Método Simplex{% endblock %} <!-- Título -->
 
-        /* MathJax */
-        window.MathJax = { tex:{ inlineMath:[['\\(','\\)'], ['\\[','\\]']] }, svg:{ fontCache:'global' } };
-    </script>
-    <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
-</head>
+{% block extra_head %} <!-- Estilo adicional -->
+<link rel="stylesheet" href="{% static 'css/simplex.css' %}">
+{% endblock %}
 
-<body>
-<h1>Método Símplex</h1>
+{% block extra_scripts %} <!-- Script adicional -->
+<script src="{% static 'js/simplex.js' %}"></script>
+<script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+{% endblock %}
 
-<form method="post">
+{% block section_content %}
+<section class="contenedor-simplex bg-simplex py-5" id="features">
+  <h1 class="titulo-simplex">Método Símplex</h1>
+  <form method="post">
     {% csrf_token %}
-    <label>Tipo de optimización:</label>
-    <select name="optim">
-        <option value="min">Minimizar</option>
-        <option value="max">Maximizar</option>
-    </select><br>
+    <div class="contenedor-campos">
+      <div class="tipo-optimizacion">
+        <label>Tipo de optimización:</label>
+        <select class="input-campos" name="optim">
+          <option value="min">Minimizar</option>
+          <option value="max">Maximizar</option>
+        </select>
+      </div>
 
-    <label>Número de variables:</label>
-    <input id="n" name="n" type="number" min="2" max="10" value="2"><br>
+      <div class="numero-variables">
+        <label>Número de variables:</label>
+        <input class="input-campos" id="n" name="n" type="number" min="2" max="10" value="2">
+      </div>
 
-    <label>Número de restricciones:</label>
-    <input id="m" name="m" type="number" min="1" max="10" value="2"><br>
+      <div class="numero-restricciones">
+        <label>Número de restricciones:</label>
+        <input class="input-campos" id="m" name="m" type="number" min="1" max="10" value="2">
+      </div>
 
-    <button type="button" onclick="generarCampos()">Generar campos</button>
-    <div id="campos"></div>
+      <button class="botones-simplex" type="button" onclick="generarCampos()">Generar campos</button>
 
-    <button type="submit">Resolver</button>
-    <button type="button" onclick="limpiarFormulario()">Limpiar</button>
-</form>
+      <div id="campos">
 
+      </div>
 
-<!-- ===================================================================
+      <div class="btn-resolver-limpiar">
+        <button class="botones-simplex" type="submit">Resolver</button>
+        <button class="botones-simplex" type="button" onclick="limpiarFormulario()">Limpiar</button>
+      </div>
+    </div>
+
+  </form>
+
+  <!-- ===================================================================
      RESULTADOS – todo dentro de #resultado-wrapper para poder borrarlo
      =================================================================== -->
-<div id="resultado-wrapper">
-{% if error %}
-  <div class="error-box">
+  <div id="resultado-wrapper">
+    {% if error %}
+    <div class="error-box">
       <p style="color:red"><strong>Error:</strong> {{ error }}</p>
       {% if explicacion_unb %}
-        <p style="font-style:italic">{{ explicacion_unb }}</p>
+      <p style="font-style:italic">{{ explicacion_unb }}</p>
       {% endif %}
       {% if explicacion_inf %}
-        <p style="font-style:italic">{{ explicacion_inf }}</p>
+      <p style="font-style:italic">{{ explicacion_inf }}</p>
       {% endif %}
-  </div>
-{% endif %}
+    </div>
+    {% endif %}
 
-{% if resultado %}
-  <h2>Solución óptima</h2>
-  <p><strong>Método usado:</strong> {{ usa_granM|yesno:"Gran M,Estándar" }}</p>
-  <ul>
+    {% if resultado %}
+    <h2>Solución óptima</h2>
+    <p><strong>Método usado:</strong> {{ usa_granM|yesno:"Gran M,Estándar" }}</p>
+    <ul>
       {% for v,val in resultado.sol.items %}
-        <li>{{ v }} = {{ val|floatformat:4 }}</li>
+      <li>{{ v }} = {{ val|floatformat:4 }}</li>
       {% endfor %}
-  </ul>
-  <p><strong>Z = {{ resultado.z|floatformat:4 }}</strong></p>
-{% endif %}
+    </ul>
+    <p><strong>Z = {{ resultado.z|floatformat:4 }}</strong></p>
+    {% endif %}
 
-{% if latex_sistema %}
-  <h2>Planteamiento del problema</h2>
-  <p>Antes de convertir a igualdades:</p>
-  <div>\[ {{ latex_sistema|safe }} \]</div>
-{% endif %}
+    {% if latex_sistema %}
+    <h2>Planteamiento del problema</h2>
+    <p>Antes de convertir a igualdades:</p>
+    <div>\[ {{ latex_sistema|safe }} \]</div>
+    {% endif %}
 
-{% if latex_convertido %}
-  <h2>Restricciones convertidas a igualdades</h2>
-  <p>Después de agregar variables de holgura, exceso o artificiales:</p>
-  <div>\[ {{ latex_convertido|safe }} \]</div>
-{% endif %}
+    {% if latex_convertido %}
+    <h2>Restricciones convertidas a igualdades</h2>
+    <p>Después de agregar variables de holgura, exceso o artificiales:</p>
+    <div>\[ {{ latex_convertido|safe }} \]</div>
+    {% endif %}
 
-{% if historial %}
-  <h2>Procedimiento paso a paso</h2>
-  {% for paso in historial %}
+    {% if historial %}
+    <h2>Procedimiento paso a paso</h2>
+    {% for paso in historial %}
     <div style="margin-bottom:2em;border-bottom:1px solid #eee;padding-bottom:20px;">
       <h3>{% if forloop.first %}Tabla inicial{% else %}Iteración {{ forloop.counter0 }}{% endif %}</h3>
 
       <!-- Variables artificiales presentes -->
       {% with paso.basis|join:"" as basis_str %}
-        {% if "a" in basis_str %}
-          <div class="artificial"><strong>Variables artificiales en base:</strong> {{ paso.basis|join:", " }}</div>
-        {% endif %}
+      {% if "a" in basis_str %}
+      <div class="artificial"><strong>Variables artificiales en base:</strong> {{ paso.basis|join:", " }}</div>
+      {% endif %}
       {% endwith %}
 
       <!-- Info de pivote -->
       {% if paso.pivote %}
-        <p><strong>Pivote:</strong>
-           Fila {{ paso.pivote.fila|add:1 }}, Col {{ paso.pivote.col|add:1 }}
-           (Entra {{ paso.pivote.entra }}, sale {{ paso.pivote.sale }})</p>
+      <p><strong>Pivote:</strong>
+        Fila {{ paso.pivote.fila|add:1 }}, Col {{ paso.pivote.col|add:1 }}
+        (Entra {{ paso.pivote.entra }}, sale {{ paso.pivote.sale }})</p>
       {% endif %}
 
       <!-- Operaciones de fila -->
       {% if paso.operaciones_filas %}
-        <h4>Operaciones de filas</h4>
-        <ul>
-          {% for op in paso.operaciones_filas %}
-            <li>{{ op }}</li>
-          {% endfor %}
-        </ul>
+      <h4>Operaciones de filas</h4>
+      <ul>
+        {% for op in paso.operaciones_filas %}
+        <li>{{ op }}</li>
+        {% endfor %}
+      </ul>
       {% endif %}
 
       <!-- Tabla -->
@@ -149,51 +125,36 @@
       <div style="overflow-x:auto">
         <table>
           <tr>
-              <th>Base</th>
-              {% for h in paso.headers %}<th>{{ h }}</th>{% endfor %}
+            <th>Base</th>
+            {% for h in paso.headers %}<th>{{ h }}</th>{% endfor %}
           </tr>
 
           {% for base, fila in paso.base_filas %}
-            <tr>
-              <td>{{ base }}</td>
-              {% for val in fila %}
-                <td>{{ val }}</td>
-              {% endfor %}
-            </tr>
+          <tr>
+            <td>{{ base }}</td>
+            {% for val in fila %}
+            <td>{{ val }}</td>
+            {% endfor %}
+          </tr>
           {% endfor %}
 
           {% with ultima=paso.tabla|last %}
-            <tr>
-              <td><strong>Z</strong></td>
-              {% for v in ultima %}<td>{{ v }}</td>{% endfor %}
-            </tr>
+          <tr>
+            <td><strong>Z</strong></td>
+            {% for v in ultima %}<td>{{ v }}</td>{% endfor %}
+          </tr>
           {% endwith %}
         </table>
       </div>
     </div>
-  {% endfor %}
-{% endif %}
+    {% endfor %}
+    {% endif %}
 
-{% if grafica %}
-  <h2>Región factible</h2>
-  <img src="data:image/png;base64,{{ grafica }}" style="max-width:600px;border:1px solid #ddd;">
-{% endif %}
-</div> <!-- /resultado-wrapper -->
+    {% if grafica %}
+    <h2>Región factible</h2>
+    <img src="data:image/png;base64,{{ grafica }}" style="max-width:600px;border:1px solid #ddd;">
+    {% endif %}
+  </div> <!-- /resultado-wrapper -->
+</section>
 
-<script>
-  /* 1️⃣ resaltado manual de pivote – opcional si agregas <td class="pivot-cell"> en backend */
-  document.addEventListener('DOMContentLoaded', () => {
-      document.querySelectorAll('.pivot-cell').forEach(c => {
-          c.style.background = '#fffacd';
-          c.style.fontWeight = 'bold';
-      });
-  });
-
-  /* 2️⃣ evita diálogo de reenvío al recargar */
-  if (window.history.replaceState) {
-      window.history.replaceState(null, '', window.location.pathname);
-  }
-</script>
-
-</body>
-</html>
+{% endblock %}

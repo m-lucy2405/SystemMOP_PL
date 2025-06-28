@@ -1,1 +1,0 @@
-# Aquí se implementará el solucionador del método símplex en el futuro

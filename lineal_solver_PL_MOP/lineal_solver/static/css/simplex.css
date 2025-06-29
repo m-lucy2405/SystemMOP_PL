@@ -1,55 +1,157 @@
 @import url('variables.css');
 
+/* -------------------- CONTENEDORES GENERALES -------------------- */
+
 .contenedor-simplex {
     background-color: var(--color-secundario) !important;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    padding: 1rem;
+    width: 100%;
 }
 
 .titulo-simplex {
     color: var(--color-oscuro);
+    text-align: center;
+    margin-bottom: 1rem;
+    width: 100%;
 }
 
-.contenedor-campos{
+.contenedor-campos {
     display: flex;
     flex-direction: column;
-    align-items: center;
-    width: fit-content;
     gap: 8px;
+    width: 100%;
+    max-width: 600px;
+    padding: 0 1rem;
+    box-sizing: border-box;
 }
 
-.botones-simplex{
+.botones-simplex {
     background-color: var(--color-oscuro);
     border: none;
     border-radius: 10px;
-    padding: 8px;
+    padding: 10px;
     color: var(--color-claro);
+    cursor: pointer;
+    transition: background 0.2s ease;
+    width: 100%;
 }
 
-.input-campos{
+.botones-simplex:hover {
+    background-color: #333;
+}
+
+.input-campos {
     background-color: var(--color-primario);
     border: none;
     border-radius: 10px;
-    padding-left: 8px;
-    padding-right: 8px;
-    margin: 4px;
+    padding: 8px 12px;
+    font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
 }
 
-.box-solution{
+.box-solution {
     background-color: var(--color-primario);
     padding: 25px;
-    margin: 15px;
+    margin: 15px auto;
     border-radius: 15px;
     border-left: 5px solid var(--color-oscuro);
+    width: 100%;
+    max-width: 800px;
+    box-sizing: border-box;
+    overflow-x: auto;
 }
 
-.contenedor-oculto{
+.btn-resolver-limpiar {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    margin-top: 1rem;
+}
+
+.btn-resolver-limpiar button {
+    width: 100%;
+}
+
+.contenedor-oculto {
     visibility: hidden;
 }
 
-/* ---------- estilos ---------- */
+/* -------------------- FUNCIÓN OBJETIVO Y RESTRICCIONES -------------------- */
+
+.fila-funcion,
+.fila-restriccion {
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    overflow-x: auto;
+    padding: 8px 0;
+}
+
+.grupo-variables {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.grupo-variables input {
+    width: 70px;
+    font-size: 1rem;
+}
+
+.grupo-variables span {
+    white-space: nowrap;
+    font-size: 1rem;
+}
+
+.fila-restriccion select,
+.fila-restriccion input[type="number"]:not(.input-campos) {
+    width: 70px;
+    font-size: 1rem;
+}
+
+/* -------------------- TABLAS Y RESULTADOS -------------------- */
+
+.tabla-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.tabla-resultante {
+    background-color: var(--color-secundario);
+    width: 100%;
+    border-collapse: collapse;
+    margin: 15px 0;
+    min-width: 500px;
+}
+
+.tabla-resultante-encabezado {
+    background-color: var(--color-oscuro);
+    color: var(--color-claro);
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: center;
+}
+
+th {
+    background: #f2f2f2;
+}
+
+.box-solution-titulo {
+    color: var(--color-oscuro);
+    margin-bottom: 10px;
+}
+
 .artificial {
     background: #ffeeee;
     padding: 8px;
@@ -69,18 +171,82 @@
     margin: 15px 0;
 }
 
-table {
-    border-collapse: collapse;
-    margin: 15px 0;
+#resultado-wrapper {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 1rem;
 }
 
-th,
-td {
+/* -------------------- GRAFICA RESPONSIVA -------------------- */
+
+.grafica-responsive {
+    width: 100%;
+    max-width: 100%;
+    height: auto;
     border: 1px solid #ddd;
-    padding: 8px;
-    text-align: center;
+    display: block;
+    margin: 0 auto;
 }
 
-th {
-    background: #f2f2f2;
+/* -------------------- RESPONSIVO -------------------- */
+
+@media (max-width: 576px) {
+    .contenedor-campos {
+        padding: 0 10px;
+    }
+
+    .fila-funcion,
+    .fila-restriccion {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+    }
+
+    .grupo-variables input,
+    .fila-restriccion select,
+    .fila-restriccion input[type="number"]:not(.input-campos) {
+        width: 70px;
+    }
+
+    .botones-simplex,
+    .input-campos {
+        min-width: 70px;
+    }
+
+    .box-solution {
+        width: 100%;
+        max-width: 100%;
+        box-sizing: border-box;
+        padding: 1rem;
+        margin: 1rem 0;
+        font-size: 0.95rem;
+    }
+
+    #resultado-wrapper {
+        padding: 0.5rem;
+    }
+
+    table {
+        font-size: 0.85rem;
+    }
+
+    th, td {
+        padding: 6px;
+    }
+}
+
+/* -------------------- TABLET Y PC -------------------- */
+
+@media (min-width: 577px) {
+    .grupo-variables input {
+        width: 70px;
+    }
+
+    .fila-restriccion select,
+    .fila-restriccion input[type="number"]:not(.input-campos) {
+        width: 70px;
+    }
+
+    .contenedor-campos {
+        max-width: 700px;
+    }
 }

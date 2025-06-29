@@ -1,18 +1,21 @@
 @import url('variables.css');
 
+/* -------------------- NAVBAR -------------------- */
 .navbar-custom {
     background-color: var(--color-primario) !important;
 }
 
-.navbar-custom .navbar-link, 
+.navbar-custom .navbar-link,
 .navbar-custom .navbar-brand {
     color: var(--color-negro) !important;
 }
 
-.navbar-custom .navbar-brand:hover, .navbar-custom .nav-link:hover {
+.navbar-custom .navbar-brand:hover,
+.navbar-custom .nav-link:hover {
     color: var(--color-blanco) !important;
 }
 
+/* -------------------- FOOTER -------------------- */
 .footer-custom {
     background-color: var(--color-primario) !important;
     color: var(--color-negro) !important;
@@ -27,33 +30,31 @@
     color: var(--color-blanco) !important;
 }
 
-/* Asegura que el html y body ocupen el 100% de la pantalla */
+/* -------------------- LAYOUT: Sticky Footer -------------------- */
 html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  background-color: #e3e9ce;
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #e3e9ce;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
 }
 
 body {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh; /* <-- Esto es crucial */
+    min-height: 100vh; /* Se asegura que el contenido crezca si es necesario */
 }
 
 main {
-  flex: 1; /* Ocupa todo el espacio disponible */
+    flex: 1; /* El contenido principal ocupa el espacio restante */
+    display: flex;
+    flex-direction: column;
 }
-.fixed-footer {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background-color: #b6d1b2;
-  text-align: center;
-  padding: 1rem;
-  font-size: 0.9rem;
-  z-index: 999;
-  box-shadow: 0 -2px 5px rgba(0, 0, 0, 0.1);
+
+/* Unificar altura visual entre navbar y footer */
+.navbar-custom,
+.footer-custom {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    font-size: 1rem;
 }

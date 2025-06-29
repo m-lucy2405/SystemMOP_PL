@@ -21,6 +21,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'autenticacion',
     'apps.metodo_simplex',
     'apps.metodo_grafico',
 ]
@@ -36,6 +37,8 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'lineal_solver.urls'
+
+
 
 TEMPLATES = [
     {
@@ -106,3 +109,8 @@ MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+LOGIN_URL = '/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/login/'

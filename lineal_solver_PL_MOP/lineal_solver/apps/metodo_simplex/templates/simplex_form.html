@@ -13,6 +13,14 @@
 <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
 {% endblock %}
 
+{% block navbar_content %}
+{% include "bases/navbar.html" %}
+{% endblock navbar_content %}
+{% block footer_content %}
+{% include "bases/footer.html" %}
+{% endblock footer_content %}
+
+
 {% block section_content %}
 <section class="contenedor-simplex bg-simplex py-5" id="features">
   <h1 class="titulo-simplex">Método Símplex</h1>

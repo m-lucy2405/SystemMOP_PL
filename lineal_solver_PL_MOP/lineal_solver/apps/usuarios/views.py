@@ -20,7 +20,7 @@ def login(request):
         else:
             messages.error(request, 'Usuario o contraseña incorrectos.')
 
-    return render(request, "autenticacion/login.html")
+    return render(request, "login.html")
 
 def register(request):
     if request.method == 'POST':
@@ -54,7 +54,7 @@ def register(request):
         messages.success(request, 'Usuario registrado correctamente.')
         return redirect('login')
 
-    return render(request, "autenticacion/register.html")
+    return render(request, "register.html")
 
 def logout_view(request):
     logout(request)

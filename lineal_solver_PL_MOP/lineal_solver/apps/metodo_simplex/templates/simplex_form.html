@@ -43,7 +43,7 @@
 
       </div>
 
-      <div class="btn-resolver-limpiar">
+      <div class="btn-resolver-limpiar contenedor-oculto">
         <button class="botones-simplex" type="submit">Resolver</button>
         <button class="botones-simplex" type="button" onclick="limpiarFormulario()">Limpiar</button>
       </div>
@@ -56,103 +56,113 @@
      =================================================================== -->
   <div id="resultado-wrapper">
     {% if error %}
-    <div class="error-box">
-      <p style="color:red"><strong>Error:</strong> {{ error }}</p>
-      {% if explicacion_unb %}
-      <p style="font-style:italic">{{ explicacion_unb }}</p>
-      {% endif %}
-      {% if explicacion_inf %}
-      <p style="font-style:italic">{{ explicacion_inf }}</p>
-      {% endif %}
-    </div>
+      <div class="error-box">
+        <p style="color:red"><strong>Error:</strong> {{ error }}</p>
+        {% if explicacion_unb %}
+          <p style="font-style:italic">{{ explicacion_unb }}</p>
+        {% endif %}
+        {% if explicacion_inf %}
+          <p style="font-style:italic">{{ explicacion_inf }}</p>
+        {% endif %}
+      </div>
     {% endif %}
 
     {% if resultado %}
-    <h2>Solución óptima</h2>
-    <p><strong>Método usado:</strong> {{ usa_granM|yesno:"Gran M,Estándar" }}</p>
-    <ul>
-      {% for v,val in resultado.sol.items %}
-      <li>{{ v }} = {{ val|floatformat:4 }}</li>
-      {% endfor %}
-    </ul>
-    <p><strong>Z = {{ resultado.z|floatformat:4 }}</strong></p>
+      <div class="box-solution">
+        <h2>Solución óptima</h2>
+        <p><strong>Método usado:</strong> {{ usa_granM|yesno:"Gran M,Estándar" }}</p>
+        <ul>
+          {% for v,val in resultado.sol.items %}
+            <li>{{ v }} = {{ val|floatformat:4 }}</li>
+          {% endfor %}
+        </ul>
+        <p><strong>Z = {{ resultado.z|floatformat:4 }}</strong></p>
+      </div>
     {% endif %}
 
     {% if latex_sistema %}
-    <h2>Planteamiento del problema</h2>
-    <p>Antes de convertir a igualdades:</p>
-    <div>\[ {{ latex_sistema|safe }} \]</div>
+      <div class="box-solution">
+        <h2>Planteamiento del problema</h2>
+        <p>Antes de convertir a igualdades:</p>
+        <div>\[ {{ latex_sistema|safe }} \]</div>
+      </div>
     {% endif %}
 
     {% if latex_convertido %}
-    <h2>Restricciones convertidas a igualdades</h2>
-    <p>Después de agregar variables de holgura, exceso o artificiales:</p>
-    <div>\[ {{ latex_convertido|safe }} \]</div>
+      <div class="box-solution">
+        <h2>Restricciones convertidas a igualdades</h2>
+        <p>Después de agregar variables de holgura, exceso o artificiales:</p>
+        <div>\[ {{ latex_convertido|safe }} \]</div>
+      </div>
     {% endif %}
 
     {% if historial %}
-    <h2>Procedimiento paso a paso</h2>
-    {% for paso in historial %}
-    <div style="margin-bottom:2em;border-bottom:1px solid #eee;padding-bottom:20px;">
-      <h3>{% if forloop.first %}Tabla inicial{% else %}Iteración {{ forloop.counter0 }}{% endif %}</h3>
+      <div class="box-solution">
+        <h2>Procedimiento paso a paso</h2>
+        {% for paso in historial %}
+          <div style="margin-bottom:2em;border-bottom:1px solid #eee;padding-bottom:20px;">
+            <h3>{% if forloop.first %}Tabla inicial{% else %}Iteración {{ forloop.counter0 }}{% endif %}</h3>
 
-      <!-- Variables artificiales presentes -->
-      {% with paso.basis|join:"" as basis_str %}
-      {% if "a" in basis_str %}
-      <div class="artificial"><strong>Variables artificiales en base:</strong> {{ paso.basis|join:", " }}</div>
-      {% endif %}
-      {% endwith %}
+            <!-- Variables artificiales presentes -->
+            {% with paso.basis|join:"" as basis_str %}
+              {% if "a" in basis_str %}
+                <div class="artificial"><strong>Variables artificiales en base:</strong> {{ paso.basis|join:", " }}</div>
+              {% endif %}
+            {% endwith %}
 
-      <!-- Info de pivote -->
-      {% if paso.pivote %}
-      <p><strong>Pivote:</strong>
-        Fila {{ paso.pivote.fila|add:1 }}, Col {{ paso.pivote.col|add:1 }}
-        (Entra {{ paso.pivote.entra }}, sale {{ paso.pivote.sale }})</p>
-      {% endif %}
+            <!-- Info de pivote -->
+            {% if paso.pivote %}
+              <p><strong>Pivote:</strong>
+              Fila {{ paso.pivote.fila|add:1 }}, Col {{ paso.pivote.col|add:1 }}
+              (Entra {{ paso.pivote.entra }}, sale {{ paso.pivote.sale }})</p>
+            {% endif %}
 
-      <!-- Operaciones de fila -->
-      {% if paso.operaciones_filas %}
-      <h4>Operaciones de filas</h4>
-      <ul>
-        {% for op in paso.operaciones_filas %}
-        <li>{{ op }}</li>
+            <!-- Operaciones de fila -->
+            {% if paso.operaciones_filas %}
+              <h4>Operaciones de filas</h4>
+              <ul>
+                {% for op in paso.operaciones_filas %}
+                  <li>{{ op }}</li>
+                {% endfor %}
+              </ul>
+            {% endif %}
+
+            <!-- Tabla -->
+            <h4>Tabla resultante</h4>
+            <div style="overflow-x:auto">
+              <table>
+                <tr>
+                  <th>Base</th>
+                  {% for h in paso.headers %}<th>{{ h }}</th>{% endfor %}
+                </tr>
+
+                {% for base, fila in paso.base_filas %}
+                  <tr>
+                    <td>{{ base }}</td>
+                    {% for val in fila %}
+                      <td>{{ val }}</td>
+                    {% endfor %}
+                  </tr>
+                {% endfor %}
+
+                {% with ultima=paso.tabla|last %}
+                  <tr>
+                    <td><strong>Z</strong></td>
+                    {% for v in ultima %}<td>{{ v }}</td>{% endfor %}
+                  </tr>
+                {% endwith %}
+              </table>
+            </div>
+          </div>
         {% endfor %}
-      </ul>
-      {% endif %}
-
-      <!-- Tabla -->
-      <h4>Tabla resultante</h4>
-      <div style="overflow-x:auto">
-        <table>
-          <tr>
-            <th>Base</th>
-            {% for h in paso.headers %}<th>{{ h }}</th>{% endfor %}
-          </tr>
-
-          {% for base, fila in paso.base_filas %}
-          <tr>
-            <td>{{ base }}</td>
-            {% for val in fila %}
-            <td>{{ val }}</td>
-            {% endfor %}
-          </tr>
-          {% endfor %}
-
-          {% with ultima=paso.tabla|last %}
-          <tr>
-            <td><strong>Z</strong></td>
-            {% for v in ultima %}<td>{{ v }}</td>{% endfor %}
-          </tr>
-          {% endwith %}
-        </table>
       </div>
-    </div>
-    {% endfor %}
     {% endif %}
 
     {% if grafica %}
-    <h2>Región factible</h2>
-    <img src="data:image/png;base64,{{ grafica }}" style="max-width:600px;border:1px solid #ddd;">
+      <div class="box-solution">
+        <h2>Región factible</h2>
+        <img src="data:image/png;base64,{{ grafica }}" style="max-width:600px;border:1px solid #ddd;">
+      </div>
     {% endif %}
   </div> <!-- /resultado-wrapper -->
 </section>

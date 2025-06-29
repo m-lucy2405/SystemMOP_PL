@@ -16,6 +16,7 @@ function generarCampos() {
                          </select>
                          <input class="input-campos" name="rhs${j}" type="number" step="any" required><br>`;
     }
+    document.querySelector('.btn-resolver-limpiar').classList.remove('contenedor-oculto');
     document.getElementById('campos').innerHTML = html;
 }
 
@@ -23,6 +24,7 @@ function generarCampos() {
 function limpiarFormulario() {
     document.querySelector('form').reset();
     document.getElementById('campos').innerHTML = '';
+    document.querySelector('.btn-resolver-limpiar').classList.add('contenedor-oculto')
     const res = document.getElementById('resultado-wrapper');
     if (res) res.remove();
     window.scrollTo({ top: 0, behavior: 'smooth' });

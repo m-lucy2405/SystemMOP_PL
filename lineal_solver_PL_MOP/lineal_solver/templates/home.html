@@ -8,6 +8,10 @@
 <link rel="stylesheet" href="{% static 'css/home.css' %}">
 {% endblock %}
 
+
+{% block navbar_content %}
+{% include "bases/navbar.html" %}
+{% endblock navbar_content %}
 {% block header_content %}
 <!-- Header-->
 <header class="header-custom py-5">
@@ -177,3 +181,8 @@
     </div>
 </section>
 {% endblock %}
+
+
+{% block footer_content %}
+{% include "bases/footer.html" %}
+{% endblock footer_content %}

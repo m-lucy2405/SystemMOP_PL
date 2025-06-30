@@ -6,5 +6,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('simplex/', include('apps.metodo_simplex.urls')),
     path('grafico/', include('apps.metodo_grafico.urls')),
-    path('', views.index, name='index'),
+    path('', views.home, name='home'),
+    path('login/', include('apps.usuarios.urls'), name='login'),
 ]

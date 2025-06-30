@@ -210,7 +210,7 @@ def simplex_estandar(
         labels=headers+["b"]
         divs=[f"{labels[j]}: {float(old[j]):.4f}÷{float(piv):.4f}={float(new[j]):.4f}"
               for j in range(len(old))]
-        ops.append(f"Fila{pr+1}Norm: "+"; ".join(divs))
+        ops.append(f"Fila{pr+1}Norm:\n "+"\n".join(divs))
         tableau[pr]=new
 
         # eliminar
@@ -220,7 +220,7 @@ def simplex_estandar(
             nxt=[old[j]-fct*tableau[pr][j] for j in range(len(old))]
             subs=[f"{labels[j]}: {float(old[j]):.4f}−{float(fct):.4f}×{float(tableau[pr][j]):.4f}"
                   f"={float(nxt[j]):.4f}" for j in range(len(old))]
-            ops.append(f"Fila{i+1}Act: "+"; ".join(subs))
+            ops.append(f"Fila{i+1}Act:\n "+"\n".join(subs))
             tableau[i]=nxt
 
         leaving=basis[pr]; entering=headers[pc]; basis[pr]=entering

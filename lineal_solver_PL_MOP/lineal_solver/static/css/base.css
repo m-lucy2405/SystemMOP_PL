@@ -1,0 +1,60 @@
+@import url('variables.css');
+
+/* -------------------- NAVBAR -------------------- */
+.navbar-custom {
+    background-color: var(--color-primario) !important;
+}
+
+.navbar-custom .navbar-link,
+.navbar-custom .navbar-brand {
+    color: var(--color-negro) !important;
+}
+
+.navbar-custom .navbar-brand:hover,
+.navbar-custom .nav-link:hover {
+    color: var(--color-blanco) !important;
+}
+
+/* -------------------- FOOTER -------------------- */
+.footer-custom {
+    background-color: var(--color-primario) !important;
+    color: var(--color-negro) !important;
+}
+
+.footer-custom a {
+    color: var(--color-negro) !important;
+    text-decoration: none;
+}
+
+.footer-custom a:hover {
+    color: var(--color-blanco) !important;
+}
+
+/* -------------------- LAYOUT: Sticky Footer -------------------- */
+html, body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    background-color: #e3e9ce;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    display: flex;
+    flex-direction: column;
+}
+
+body {
+    min-height: 100vh; /* Se asegura que el contenido crezca si es necesario */
+}
+
+main {
+    flex: 1; /* El contenido principal ocupa el espacio restante */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Unificar altura visual entre navbar y footer */
+.navbar-custom,
+.footer-custom {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+    font-size: 1rem;
+}

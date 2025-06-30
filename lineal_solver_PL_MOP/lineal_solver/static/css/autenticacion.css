@@ -1,0 +1,80 @@
+/* Fondo suave de la página */
+
+/* Contenedor del formulario centrado vertical y horizontalmente */
+section {
+  background-color: #e3e9ce;
+  min-height: 80vh;
+  height: max-content;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Caja blanca del formulario */
+.login-container {
+  background-color: #ffffff;
+  padding: 2rem;
+  border-radius: 10px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.1);
+  width: auto;              /* Ajusta el ancho al contenido */
+  max-width: 100%;          /* No se pasa del ancho del padre */
+  display: inline-block;    /* Permite que el tamaño se adapte al contenido */
+}
+
+
+/* Título */
+.login-container h2 {
+  color: #816a9e;
+  font-weight: bold;
+  font-size: 1.8rem;
+}
+
+/* Etiquetas */
+label {
+  color: #333;
+  font-weight: 500;
+}
+
+/* Campos de entrada */
+.form-control.form-input {
+  background-color: #f9f9f9;
+  border: 2px solid #ccc;
+  border-radius: 6px;
+  padding: 0.5rem;
+  font-size: 1rem;
+}
+
+/* Botón principal */
+.btn-primary {
+  background-color: #a488d8;
+  color: white;
+  border: none;
+  padding: 0.6rem;
+  font-weight: bold;
+  font-size: 1rem;
+  border-radius: 6px;
+  transition: background-color 0.3s ease;
+  
+}
+
+.btn-primary:hover {
+  background-color: #8661c1;
+}
+
+.btn-secondary {
+  background-color: #3c2a4d!important;
+  color: white;
+  border: none;
+  padding: 0.6rem;
+  font-weight: bold;
+  font-size: 1rem;
+  border-radius: 6px;
+  transition: background-color 0.3s ease;
+  max-width: 50%;
+}
+
+.btn-secondary:hover {
+  background-color: #2e203c !important; 
+}
+
+

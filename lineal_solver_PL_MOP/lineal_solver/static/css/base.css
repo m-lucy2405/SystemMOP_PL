@@ -82,17 +82,17 @@ main {
 }
 
 .btn-translate-es {
-    background-color: #FF5733; /* Rojo/anaranjado vibrante */
+    background-color: var(--color-oscuro);
     border-top-left-radius: 10px !important;
     border-top-right-radius: 10px !important;
 }
 
 .btn-translate-en {
-    background-color: #3498DB; /* Azul brillante */
+    background-color: var(--color-blanco);
 }
 
 .btn-translate-fr {
-    background-color: #2ECC71; /* Verde esmeralda */
+    background-color: var(--color-primario);
     border-bottom-left-radius: 10px !important;
     border-bottom-right-radius: 10px !important;
 }
@@ -110,4 +110,22 @@ main {
 /* Efecto al activar */
 .btn-translate:active {
     transform: scale(0.95);
+}
+
+/* Oculta el contenedor de calificar la traducción */
+.goog-te-gadget img{
+    display:none !important;
+}
+body > .skiptranslate {
+    display: none;
+}
+body {
+    top: 0px !important;
+}
+.VIpgJd-yAWNEb-hvhgNd,
+.goog-te-banner-frame,
+#goog-gt-tt,
+.goog-te-balloon-frame,
+.goog-text-highlight {
+  display: none !important;
 }

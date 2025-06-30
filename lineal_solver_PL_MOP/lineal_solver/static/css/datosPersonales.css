@@ -1,0 +1,75 @@
+/* --- Contenedor principal --- */
+.card {
+  border-radius: 16px;
+  background-color: #ffffff;
+  box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* --- Título --- */
+h2 {
+  font-weight: bold;
+  color: #222;
+  margin-bottom: 25px;
+}
+
+/* --- Botones de cambio de formulario --- */
+.mb-3 > button {
+  background-color: #d8e8d8;
+  border: 1px solid #b6d5b6;
+  color: #333;
+  padding: 8px 14px;
+  margin-right: 10px;
+  border-radius: 5px;
+  transition: 0.3s;
+}
+
+.mb-3 > button:hover {
+  background-color: #c1dec1;
+}
+
+/* --- Inputs --- */
+input[type="text"],
+input[type="password"] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ced4da;
+  border-radius: 5px;
+  margin-top: 5px;
+  background-color: #fdfdfd;
+}
+
+/* --- Etiquetas --- */
+label {
+  font-weight: 500;
+}
+
+/* --- Botones principales --- */
+.btn-primary {
+  background-color: #0d6efd;
+  border: none;
+  padding: 8px 20px;
+  font-weight: 500;
+  border-radius: 5px;
+}
+
+.btn-primary:hover {
+  background-color: #084ec1;
+}
+
+.btn-secondary {
+  background-color: #6c757d;
+  border: none;
+  padding: 8px 20px;
+  font-weight: 500;
+  border-radius: 5px;
+}
+
+.btn-secondary:hover {
+  background-color: #565e64;
+}
+
+/* --- Mensajes de error --- */
+.text-danger {
+  font-size: 0.875rem;
+  margin-top: 4px;
+}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Editar Usuario{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/datosPersonales.css' %}">
+{% endblock %}
+
+{% block navbar_content %}
+{% include "bases/navbar.html" %}
+{% endblock navbar_content %}
+{% block footer_content %}
+{% include "bases/footer.html" %}
+{% endblock footer_content %}
+
+{% block section_content %}
+<div class="container py-5">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow p-4">
+        <div class="container mt-4">
+          <h2>Editar nombre de usuario</h2>
+
+          <form method="post">
+            {% csrf_token %}
+
+            {% if form_usuario.non_field_errors %}
+              <div class="alert alert-danger">
+                {% for error in form_usuario.non_field_errors %}
+                  <div>{{ error }}</div>
+                {% endfor %}
+              </div>
+            {% endif %}
+
+            <div class="mb-3">
+              {{ form_usuario.nuevo_username.label_tag }}
+              {{ form_usuario.nuevo_username }}
+              {% if form_usuario.nuevo_username.errors %}
+                <div class="text-danger">{{ form_usuario.nuevo_username.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <div class="mb-3">
+              {{ form_usuario.password.label_tag }}
+              {{ form_usuario.password }}
+              {% if form_usuario.password.errors %}
+                <div class="text-danger">{{ form_usuario.password.errors.0 }}</div>
+              {% endif %}
+            </div>
+
+            <button type="submit" class="btn btn-primary">Guardar cambios</button>
+            <a href="{% url 'perfil' %}" class="btn btn-secondary">Cancelar</a>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

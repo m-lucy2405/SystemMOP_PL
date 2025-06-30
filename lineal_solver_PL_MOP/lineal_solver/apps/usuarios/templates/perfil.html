@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Perfil{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/perfil.css' %}">
+{% endblock %}
+
+{% block navbar_content %}
+{% include "bases/navbar.html" %}
+{% endblock navbar_content %}
+
+{% block footer_content %}
+{% include "bases/footer.html" %}
+{% endblock footer_content %}
+
+{% block section_content %}
+<div class="container py-5">
+  
+  <div class="row justify-content-center">
+    
+    <div class="col-md-8">
+      
+      <div class="card shadow p-4">
+        <div class="text-center mb-4">
+          <img src="{{ perfil.imagen.url }}" alt="Imagen de perfil" class="img-fluid rounded-circle" width="150" height="150">
+
+          <h3 class="mt-4 notranslate">{{ request.user.first_name }} {{ request.user.last_name }}</h3>
+          <p class="text-muted notranslate">@  {{ request.user.username }}</p>
+          <p class="text-muted notranslate">{{ request.user.email }}</p>
+        </div>
+
+        <div class="d-flex justify-content-between mb-4">
+  
+  <div class="d-flex flex-column justify-content-center">
+    <a href="{% url 'editar_datos' %}" class="btn btn-outline-primary">Cambiar sus datos personales</a>
+  </div>
+
+  
+  <div class="d-flex flex-column align-items-end">
+    <a href="{% url 'editar_usuario' %}" class="btn btn-outline-secondary mb-2">Cambiar usuario</a>
+    <a href="{% url 'editar_password' %}" class="btn btn-outline-secondary">Cambiar contraseña</a>
+  </div>
+</div>
+
+
+        
+
+        
+      </div>
+      
+
+    </div>
+  </div>
+  <div class="historial-section mt-4">
+  <h5 class="mb-3">Historial</h5>
+
+  <div class="historial-buttons">
+    <button onclick="mostrarFormulario('grafico')" class="btn btn-outline-success">Método Gráfico</button>
+    <button onclick="mostrarFormulario('simplex')" class="btn btn-outline-info">Método Símplex</button>
+  </div>
+
+  <div class="historial-table">
+    <div id="metodo-grafico" style="display: none;">
+      {% include "historialMetodoGrafico.html" %}
+    </div>
+
+    <div id="metodo-simplex" style="display: none;">
+      {% include "historialMetodoSimplex.html" %}
+    </div>
+  </div>
+</div>
+</div>
+
+<script>
+  function mostrarFormulario(metodo) {
+    document.getElementById('metodo-grafico').style.display = 'none';
+    document.getElementById('metodo-simplex').style.display = 'none';
+
+    document.getElementById(`metodo-${metodo}`).style.display = 'block';
+  }
+</script>
+{% endblock %}

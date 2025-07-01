@@ -42,7 +42,10 @@
 
                 <div class="mb-3 col-md-6">
                     <label for="correo" class="form-label">Correo</label>
-                    <input type="email" name="correo" id="correo" class="form-control form-input" required />
+                    <input type="email" name="correo" id="correo" class="form-control form-input" required 
+       pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}" 
+       title="Introduce un correo electrónico válido (ejemplo@dominio.com)" />
+
                 </div>
 
                 <div class="mb-3 col-md-6">
@@ -66,4 +69,25 @@
 
     </div>
 </section>
+
+<script>
+  document.querySelector("form").addEventListener("submit", function (e) {
+    const inputs = this.querySelectorAll("input[required]");
+    let valid = true;
+
+    inputs.forEach(input => {
+      if (!input.checkValidity()) {
+        input.classList.add("is-invalid");
+        valid = false;
+      } else {
+        input.classList.remove("is-invalid");
+      }
+    });
+
+    if (!valid) {
+      e.preventDefault(); 
+    }
+  });
+</script>
+
 {% endblock %}

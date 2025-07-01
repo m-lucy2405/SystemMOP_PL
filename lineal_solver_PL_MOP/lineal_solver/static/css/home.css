@@ -3,3 +3,12 @@
 .header-custom{
     background-color: var(--color-primario) !important;
 }
+
+.btn-comenzar-home{
+    background-color: var(--color-oscuro) !important;
+    color: var(--color-claro) !important;
+}
+
+.home-librerias{
+    background-color: var(--color-secundario) !important;
+}

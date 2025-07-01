@@ -1,5 +1,7 @@
 from django.shortcuts import render
 from .models import SimplexProblem
+from django.db import models
+from django.contrib.auth.models import User
 from .simplex_es import (
     simplex_estandar,
     simplex_solve,
@@ -11,6 +13,8 @@ import json
 # Vista principal
 # ----------------------------------------------------------------------
 def metodo_simplex_view(request):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='problemas_simplex')
+   
     # ---------------- variables que envía la plantilla ----------------
     resultado = historial = grafica = None
     usa_granM = False
@@ -112,6 +116,7 @@ def metodo_simplex_view(request):
             # ------------------------------------------------------------
             if resultado and not error:
                 SimplexProblem.objects.create(
+                    user=request.user,
                     optim=optim,
                     n=n,
                     m=m,

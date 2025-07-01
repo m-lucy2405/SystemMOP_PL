@@ -30,20 +30,20 @@ def metodo_simplex_view(request):
             optim = request.POST["optim"]          # 'min' | 'max'
             minimize = optim == "min"
 
-            obj   = [float(request.POST[f"obj{i+1}"]) for i in range(n)]
-            cons  = [[float(request.POST[f"cons{j+1}_{i+1}"]) for i in range(n)]
-                     for j in range(m)]
+            obj = [float(request.POST[f"obj{i+1}"]) for i in range(n)]
+            cons = [[float(request.POST[f"cons{j+1}_{i+1}"]) for i in range(n)]
+                   for j in range(m)]
             types = [request.POST[f"type{j+1}"] for j in range(m)]
-            rhs   = [float(request.POST[f"rhs{j+1}"]) for j in range(m)]
+            rhs = [float(request.POST[f"rhs{j+1}"]) for j in range(m)]
 
             # ------------------------------------------------------------
             # 2. Construir LaTeX (formulación y forma convertida)
             # ------------------------------------------------------------
-            latex_sistema    = construir_latex_sistema(n, m, obj, cons, types, rhs)
-            latex_convertido = construir_latex_convertido(n, m, obj, cons, types, rhs)
+            latex_sistema = construir_latex_sistema(n, m, obj, cons, types, rhs, optim)
+            latex_convertido = construir_latex_convertido(n, m, obj, cons, types, rhs, optim)
 
             # ------------------------------------------------------------
-            # 3. Elegir solver  (Estándar vs Gran-M)
+            # 3. Elegir solver (Estándar vs Gran-M)
             # ------------------------------------------------------------
             usa_granM = any(t in (">=", "=") for t in types)
 
@@ -56,31 +56,23 @@ def metodo_simplex_view(request):
             # 4. Interpretar el resultado del solver
             # ------------------------------------------------------------
             if sol is None:
-                # El solver devolvió None → algo falló (infactible / unbounded / error)
                 if historial and isinstance(historial[-1], dict):
                     ultimo = historial[-1]
 
-                    # -------- caso no acotado --------------------------------
                     if ultimo.get("unbounded"):
                         error = "El problema no está acotado"
                         explicacion_unb = (
                             "La función objetivo puede crecer indefinidamente porque "
                             "alguna variable puede aumentar sin violar las restricciones."
                         )
-
-                    # -------- caso infactible --------------------------------
                     elif ultimo.get("infeasible") or ultimo.get("explicacion_inf"):
                         error = "No existe solución factible"
-                        # Usa la explicación generada por el solver si está disponible;
-                        # de lo contrario, muestra un texto genérico.
                         explicacion_inf = ultimo.get(
                             "explicacion_inf",
                             "Las restricciones son incompatibles: "
                             "al finalizar la Fase I quedó al menos una variable "
                             "artificial con valor positivo."
                         )
-
-                    # -------- otro error genérico ----------------------------
                     else:
                         error = ultimo.get("error", "No se encontró solución factible")
                 else:
@@ -94,9 +86,7 @@ def metodo_simplex_view(request):
             if historial:
                 for paso in historial:
                     if "basis" in paso and "tabla" in paso and "headers" in paso:
-                        # Emparejamos cada fila de la tabla con su variable básica
                         paso["base_filas"] = list(zip(paso["basis"], paso["tabla"][:-1]))
-                        # La fila Z-Cj (última) y los headers ya vienen listos
 
             # ------------------------------------------------------------
             # 6. Generar gráfica (sólo si n == 2 y hubo solución)
@@ -122,7 +112,6 @@ def metodo_simplex_view(request):
                     resultado=json.dumps(resultado),
                 )
 
-        # ------------------- manejo de excepciones ----------------------
         except ValueError as ve:
             error = f"Datos numéricos inválidos: {ve}"
         except KeyError as ke:
@@ -131,56 +120,59 @@ def metodo_simplex_view(request):
             error = f"Error inesperado: {str(e)}"
 
     # ==================================================================
-    #   GET o POST con errores  →  renderizar plantilla
+    #   Renderizar plantilla
     # ==================================================================
     return render(
         request,
         "simplex_form.html",
         {
-            "resultado":        resultado,
-            "historial":        historial,
-            "usa_granM":        usa_granM,
-            "grafica":          grafica,
-            "error":            error,
-            "explicacion_inf":  explicacion_inf,
-            "explicacion_unb":  explicacion_unb,
-            "latex_sistema":    latex_sistema,
+            "resultado": resultado,
+            "historial": historial,
+            "usa_granM": usa_granM,
+            "grafica": grafica,
+            "error": error,
+            "explicacion_inf": explicacion_inf,
+            "explicacion_unb": explicacion_unb,
+            "latex_sistema": latex_sistema,
             "latex_convertido": latex_convertido,
         },
     )
 
-# ----------------------------------------------------------------------
-# Utilidades LaTeX  (sin cambios)
-# ----------------------------------------------------------------------
-def construir_latex_sistema(n, m, obj, cons, types, rhs):
+def construir_latex_sistema(n, m, obj, cons, types, rhs, optim):
     partes = []
     for i in range(m):
         lhs = " + ".join(f"{cons[i][j]}x_{{{j+1}}}" for j in range(n))
         partes.append(f"{lhs} {types[i]} {rhs[i]}")
     sistema = r"\left\{\begin{array}{l}" + r"\\ ".join(partes) + r"\end{array}\right."
     obj_expr = " + ".join(f"{obj[j]}x_{{{j+1}}}" for j in range(n))
+    tipo_optim = "Maximizar" if optim == "max" else "Minimizar"
     return (
         r"\begin{aligned}"
-        r"\text{Optimizar } & Z = " + obj_expr + r" \\ "
+        rf"\text{{{tipo_optim}}} & Z = {obj_expr} \\ "
         r"\text{Sujeto a:} & " + sistema + r"\end{aligned}"
     )
 
-def construir_latex_convertido(n, m, obj, cons, types, rhs):
+def construir_latex_convertido(n, m, obj, cons, types, rhs, optim):
     ecuaciones = []
     s = e = a = 1
     for i in range(m):
         lhs = [f"{cons[i][j]}x_{{{j+1}}}" for j in range(n)]
         if types[i] == "<=":
-            lhs.append(f"s_{{{s}}}"); s += 1
+            lhs.append(f"s_{{{s}}}")
+            s += 1
         elif types[i] == ">=":
-            lhs.append(f"-e_{{{e}}} + a_{{{a}}}"); e += 1; a += 1
+            lhs.append(f"-e_{{{e}}} + a_{{{a}}}")
+            e += 1
+            a += 1
         else:  # "="
-            lhs.append(f"a_{{{a}}}"); a += 1
+            lhs.append(f"a_{{{a}}}")
+            a += 1
         ecuaciones.append(" + ".join(lhs).replace("+ -", "- ") + f" = {rhs[i]}")
     sistema = r"\left\{\begin{array}{l}" + r"\\ ".join(ecuaciones) + r"\end{array}\right."
     obj_expr = " + ".join(f"{obj[j]}x_{{{j+1}}}" for j in range(n))
+    tipo_optim = "Maximizar" if optim == "max" else "Minimizar"
     return (
         r"\begin{aligned}"
-        r"\text{Optimizar } & Z = " + obj_expr + r" \\ "
+        rf"\text{{{tipo_optim}}} & Z = {obj_expr} \\ "
         r"\text{Sujeto a:} & " + sistema + r"\end{aligned}"
     )

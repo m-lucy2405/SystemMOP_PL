@@ -1,0 +1,123 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Ejemplo Resuelto - Método Simplex{% endblock %}
+
+{% block section_content %}
+<div class="container py-5" style="max-width: 900px; color: #1b1b1b;"> 
+  <h1 class="text-3xl font-bold text-green-800 mb-4">Ejercicio Resuelto – Método Simplex</h1>
+
+  <h2 class="text-xl font-semibold text-green-700 border-b border-green-300 pb-2 mt-6">¿Qué es el Método Simplex?</h2>
+  <p class="bg-green-50 border-l-4 border-green-300 p-4 rounded my-4">
+    El <strong>Método Simplex</strong> es un algoritmo de optimización utilizado para resolver <strong>problemas de programación lineal</strong>.
+    Su objetivo es encontrar la mejor solución (máximo o mínimo) para una función lineal <em>(función objetivo)</em>,
+    sujeta a un conjunto de <em>restricciones lineales</em>.
+  </p>
+
+  <h3 class="text-lg font-semibold text-green-700 mt-6">Características principales:</h3>
+  <ul class="bg-green-50 border-l-4 border-green-300 p-4 rounded list-disc pl-6 my-4">
+    <li>Trabaja con funciones lineales.</li>
+    <li>Las restricciones también deben ser igualdades o desigualdades lineales.</li>
+    <li>La solución óptima se encuentra en alguno de los vértices de la región factible.</li>
+  </ul>
+
+  <h3 class="text-lg font-semibold text-green-700 mt-6">Pasos generales del método:</h3>
+  <ol class="bg-green-50 border-l-4 border-green-300 p-4 rounded list-decimal pl-6 my-4">
+    <li>Plantear la función objetivo (a maximizar o minimizar).</li>
+    <li>Escribir las restricciones del problema.</li>
+    <li>Convertir las restricciones en igualdades agregando variables de holgura o exceso.</li>
+    <li>Construir la tabla inicial del método simplex.</li>
+    <li>Aplicar iteraciones: identificar la variable que entra y la que sale de la base.</li>
+    <li>Repetir hasta alcanzar el óptimo.</li>
+    <li>Leer la solución desde la tabla final.</li>
+  </ol>
+
+  <h2 class="text-xl font-semibold text-green-700 border-b border-green-300 pb-2 mt-6">1. Planteamiento del Problema</h2>
+  <p class="my-2"><strong>Maximizar:</strong> Z = 4x₁ + 6x₂</p>
+  <p class="my-2"><strong>Sujeto a:</strong></p>
+  <ul class="list-disc pl-6 mb-4">
+    <li>2x₁ + x₂ ≤ 6</li>
+    <li>x₁ + 2x₂ ≤ 8</li>
+    <li>x₁, x₂ ≥ 0</li>
+  </ul>
+
+  <h2 class="text-xl font-semibold text-green-700 border-b border-green-300 pb-2 mt-6">2. Forma Estándar</h2>
+  <p class="my-2">Agregamos variables de holgura s₁ y s₂:</p>
+  <ul class="list-disc pl-6 mb-4">
+    <li>2x₁ + x₂ + s₁ = 6</li>
+    <li>x₁ + 2x₂ + s₂ = 8</li>
+  </ul>
+  <p>Función objetivo: Z - 4x₁ - 6x₂ = 0</p>
+
+  <h2 class="text-xl font-semibold text-green-700 mt-6 mb-2">3. Tabla Inicial del Método Simplex</h2>
+  <div class="overflow-x-auto">
+    <table class="w-full border text-center text-sm my-4">
+      <thead class="bg-green-700 text-white">
+        <tr><th>Base</th><th>x₁</th><th>x₂</th><th>s₁</th><th>s₂</th><th>RHS</th></tr>
+      </thead>
+      <tbody class="bg-white">
+        <tr><td>s₁</td><td>2</td><td>1</td><td>1</td><td>0</td><td>6</td></tr>
+        <tr><td>s₂</td><td>1</td><td>2</td><td>0</td><td>1</td><td>8</td></tr>
+        <tr><td>Z</td><td>-4</td><td>-6</td><td>0</td><td>0</td><td>0</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="text-xl font-semibold text-green-700 mt-6 mb-2">4. Iteración 1</h2>
+  <p>Variable entrante: <strong>x₂</strong> (mayor negativo en Z: -6)</p>
+  <p>Razones:</p>
+  <ul class="list-disc pl-6 mb-4">
+    <li>Fila 1: 6 / 1 = 6</li>
+    <li>Fila 2: 8 / 2 = 4 → entra x₂, sale s₂</li>
+  </ul>
+
+  <h3 class="text-lg font-semibold text-green-700 mt-4">Tabla después de Iteración 1</h3>
+  <div class="overflow-x-auto">
+    <table class="w-full border text-center text-sm my-4">
+      <thead class="bg-green-700 text-white">
+        <tr><th>Base</th><th>x₁</th><th>x₂</th><th>s₁</th><th>s₂</th><th>RHS</th></tr>
+      </thead>
+      <tbody class="bg-white">
+        <tr><td>s₁</td><td>1.5</td><td>0</td><td>1</td><td>-0.5</td><td>2</td></tr>
+        <tr><td>x₂</td><td>0.5</td><td>1</td><td>0</td><td>0.5</td><td>4</td></tr>
+        <tr><td>Z</td><td>-1</td><td>0</td><td>0</td><td>3</td><td>24</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="text-xl font-semibold text-green-700 mt-6 mb-2">5. Iteración 2</h2>
+  <p>Variable entrante: <strong>x₁</strong> (único negativo en Z: -1)</p>
+  <p>Razones:</p>
+  <ul class="list-disc pl-6 mb-4">
+    <li>Fila 1: 2 / 1.5 ≈ 1.33</li>
+    <li>Fila 2: 4 / 0.5 = 8</li>
+  </ul>
+  <p>Sale: s₁</p>
+
+  <h3 class="text-lg font-semibold text-green-700 mt-4">Tabla después de Iteración 2</h3>
+  <div class="overflow-x-auto">
+    <table class="w-full border text-center text-sm my-4">
+      <thead class="bg-green-700 text-white">
+        <tr><th>Base</th><th>x₁</th><th>x₂</th><th>s₁</th><th>s₂</th><th>RHS</th></tr>
+      </thead>
+      <tbody class="bg-white">
+        <tr><td>x₁</td><td>1</td><td>0</td><td>0.67</td><td>-0.33</td><td>1.33</td></tr>
+        <tr><td>x₂</td><td>0</td><td>1</td><td>-0.33</td><td>0.67</td><td>3.33</td></tr>
+        <tr><td>Z</td><td>0</td><td>0</td><td>0.67</td><td>2.67</td><td>26</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 class="text-xl font-semibold text-green-700 mt-6">6. Solución Óptima</h2>
+  <ul class="list-disc pl-6 mb-6">
+    <li>x₁ = 1.33</li>
+    <li>x₂ = 3.33</li>
+    <li><strong>Z = 26</strong></li>
+  </ul>
+
+  <h2 class="text-xl font-semibold text-green-700 mt-6">7. Gráfica (opcional)</h2>
+  <p class="bg-green-50 border-l-4 border-green-300 p-4 rounded my-4">
+    Se puede graficar la región factible y marcar el punto óptimo (1.33, 3.33) si se desea.
+  </p>
+</div>
+{% endblock %}

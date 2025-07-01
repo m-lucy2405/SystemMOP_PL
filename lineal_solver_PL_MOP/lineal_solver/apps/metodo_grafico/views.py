@@ -12,18 +12,17 @@ def grafico_solver_view(request):
     if request.method == 'POST':
         form = ProblemaGraficoForm(request.POST)
         if form.is_valid():
-            # Guardar problema inicial
             problema = form.save(commit=False)
 
-            # Parsear JSON
-            restricciones = json.loads(form.cleaned_data['restricciones'])
-            funcion_objetivo = json.loads(form.cleaned_data['funcion_objetivo'])
+            if request.user.is_authenticated:
+                problema.user = request.user  
 
-            # Resolver
             try:
+                restricciones = json.loads(form.cleaned_data['restricciones'])
+                funcion_objetivo = json.loads(form.cleaned_data['funcion_objetivo'])
+
                 vertices, optimo = resolver_problema(restricciones, funcion_objetivo)
 
-                # Guardar en modelo
                 problema.solucion_optima = optimo
                 problema.vertices_factibles = vertices
                 problema.save()
@@ -35,7 +34,6 @@ def grafico_solver_view(request):
                 }
             except Exception as e:
                 form.add_error(None, f"Error al resolver: {e}")
-
     else:
         form = ProblemaGraficoForm()
 

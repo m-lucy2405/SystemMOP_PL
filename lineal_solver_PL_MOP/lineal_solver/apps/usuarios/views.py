@@ -11,7 +11,7 @@ from django.utils.translation import gettext as _
 from .models import PerfilUsuario
 from .forms import PerfilUsuarioForm, CambiarUsuarioForm, CambiarContrasenaForm
 from apps.metodo_simplex.models import SimplexProblem
-# from apps.metodo_grafico.models import GraficoProblem  # Si lo vas a usar luego
+from apps.metodo_grafico.models import ProblemaGrafico
 
 # ----------------------------------------
 # VISTA LOGIN
@@ -106,17 +106,24 @@ def register(request):
 # ----------------------------------------
 @login_required
 def perfil_view(request):
+    # Limpia mensajes previos para evitar repetidos
     storage = messages.get_messages(request)
     for _ in storage:
         pass
+
+    # Obtiene el perfil o lo crea si no existe
     perfil, _ = PerfilUsuario.objects.get_or_create(user=request.user)
+
+    # Filtra problemas simplex del usuario
     problemas_simplex = SimplexProblem.objects.filter(user=request.user).order_by('-fecha')
-    # problemas_grafico = GraficoProblem.objects.all().order_by('-fecha')
+
+    # Filtra problemas gráficos del usuario o los anónimos (user=null)
+    problemas_grafico = ProblemaGrafico.objects.filter(user=request.user).order_by('-fecha_creacion')
 
     return render(request, 'perfil.html', {
         'perfil': perfil,
         'problemas_simplex': problemas_simplex,
-        # 'problemas_grafico': problemas_grafico,
+        'problemas_grafico': problemas_grafico,
     })
 
 

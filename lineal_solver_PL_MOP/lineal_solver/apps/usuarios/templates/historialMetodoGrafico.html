@@ -1,0 +1,31 @@
+ <div class="table-responsive">
+      <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+          <tr>
+            <th>Nombre</th>
+            <th>Restricciones</th>
+            <th>Función Objetivo</th>
+            <th>Solución Óptima</th>
+            <th>Vértices Factibles</th>
+            <th>Fecha</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for problema in problemas %}
+            <tr>
+              <td>{{ problema.nombre }}</td>
+              <td><pre>{{ problema.restricciones|safe }}</pre></td>
+              <td>{{ problema.funcion_objetivo }}</td>
+              <td><pre>{{ problema.solucion_optima|safe }}</pre></td>
+              <td><pre>{{ problema.vertices_factibles|safe }}</pre></td>
+              <td>{{ problema.fecha_creacion|date:"Y-m-d H:i" }}</td>
+            </tr>
+
+            {% empty %}
+             <tr>
+            <td colspan="10" class="text-center text-muted">No hay problemas registrados aún.</td>
+            </tr>
+    {% endfor %}
+        </tbody>
+      </table>
+    </div>

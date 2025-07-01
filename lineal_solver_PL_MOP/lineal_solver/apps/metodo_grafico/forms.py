@@ -6,6 +6,7 @@ class ProblemaGraficoForm(forms.ModelForm):
         model = ProblemaGrafico
         fields = ['nombre', 'restricciones', 'funcion_objetivo']
         widgets = {
-            'restricciones': forms.Textarea(attrs={'rows': 4, 'placeholder': 'Ej: [{"lhs":[1,2],"sign":"<=","rhs":10}, ...]'}),
-            'funcion_objetivo': forms.TextInput(attrs={'placeholder': 'Ej: [3,5]'}),
+            'nombre': forms.TextInput(attrs={'placeholder': 'Nombre descriptivo'}),
+            'restricciones': forms.Textarea(attrs={'rows': 4, 'placeholder': '[{"lhs":[1,2],"sign":"<=","rhs":10}, ...]'}),
+            'funcion_objetivo': forms.TextInput(attrs={'placeholder': '[c1, c2]'}),
         }

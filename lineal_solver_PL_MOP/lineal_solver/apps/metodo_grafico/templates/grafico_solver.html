@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block navbar_content %}
+{% include "bases/navbar.html" %}
+{% endblock navbar_content %}
+{% block footer_content %}
+{% include "bases/footer.html" %}
+{% endblock footer_content %}
+
+{% block section_content %}
+
+
+<h2>Resolver Problema por Método Gráfico</h2>
+
+<form method="post">
+  {% csrf_token %}
+  {{ form.as_p }}
+  <button type="submit">Resolver</button>
+</form>
+
+{% if resultado %}
+<hr>
+<h3>Resultado Óptimo</h3>
+<p><strong>Coordenadas:</strong> ({{ resultado.optimo.x|floatformat:2 }}, {{ resultado.optimo.y|floatformat:2 }})</p>
+<p><strong>Valor función objetivo:</strong> {{ resultado.optimo.z|floatformat:2 }}</p>
+
+<div id="grafico" style="width: 100%; height: 600px;"></div>
+<button id="download-png">Descargar PNG</button>
+<button id="download-pdf">Descargar PDF</button>
+
+
+<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+<script>
+  const vertices = JSON.parse('{{ vertices|escapejs }}');
+  const optimo = JSON.parse('{{ optimo|escapejs }}');
+  renderGraficoSolver(vertices, optimo);
+</script>
+
+{% endif %}
+{% endblock %}

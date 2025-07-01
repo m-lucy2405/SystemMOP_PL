@@ -7,11 +7,7 @@ class PerfilUsuario(models.Model):
     imagen = models.ImageField(upload_to='perfil/', default='perfil/usuario.png')
     telefono = models.CharField(
         max_length=8,
-        unique=True,
         blank=True,
-        error_messages={
-        'unique': "Este número de teléfono ya está registrado."
-    },
         validators=[
             RegexValidator(
                 regex=r'^\d{8}$',

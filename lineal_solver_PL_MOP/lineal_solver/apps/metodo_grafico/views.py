@@ -1,6 +1,7 @@
 from django.shortcuts import render
 import json
-from .grafico_solver import resolver_problema  # Asegúrate de tener esta función implementada
+from .grafico_solver import resolver_problema
+from .models import ProblemaGrafico
 
 def grafico_solver_view(request):
     resultado = None
@@ -9,7 +10,7 @@ def grafico_solver_view(request):
 
     if request.method == 'POST':
         try:
-            n = int(request.POST.get('n', 2))  # Siempre 2 para método gráfico
+            n = int(request.POST.get('n', 2))
             m = int(request.POST.get('m', 2))
             optim = request.POST.get('optim')
 
@@ -40,6 +41,21 @@ def grafico_solver_view(request):
                 'vertices': vertices,
                 'optimo': optimo,
             }
+
+            # Guardar en la base de datos solo si el usuario está autenticado
+            if request.user.is_authenticated:
+                ProblemaGrafico.objects.create(
+                    user=request.user,
+                    optim=optim,
+                    n=n,
+                    m=m,
+                    obj=json.dumps(obj),
+                    cons=json.dumps(cons),
+                    types=json.dumps(types),
+                    rhs=json.dumps(rhs),
+                    resultado=json.dumps(resultado)
+                )
+
         except Exception as e:
             resultado = {'error': str(e)}
 

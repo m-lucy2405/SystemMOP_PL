@@ -1,0 +1,42 @@
+<table class="table table-striped table-hover">
+  <thead class="table-dark">
+    <tr>
+      <th>ID</th>
+      <th>Tipo</th>
+      <th>Variables (n)</th>
+      <th>Restricciones (m)</th>
+      <th>Función Objetivo</th>
+      <th>Restricciones</th>
+      <th>Tipos</th>
+      <th>Bj</th>
+      <th>Resultado</th>
+      <th>Fecha</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for problema in problemas_grafico %}
+    <tr>
+      <td>{{ problema.id }}</td>
+      <td>{{ problema.get_optim_display }}</td>
+      <td>{{ problema.n }}</td>
+      <td>{{ problema.m }}</td>
+      <td>{{ problema.obj }}</td>
+      <td><pre>{{ problema.cons }}</pre></td>
+      <td>{{ problema.types }}</td>
+      <td>{{ problema.rhs }}</td>
+      <td>
+        {% if problema.resultado %}
+          <pre>{{ problema.resultado }}</pre>
+        {% else %}
+          <span class="text-muted">Pendiente</span>
+        {% endif %}
+      </td>
+      <td>{{ problema.fecha_creacion|date:"Y-m-d H:i" }}</td>
+    </tr>
+    {% empty %}
+    <tr>
+      <td colspan="10" class="text-center text-muted">No hay problemas gráficos registrados aún.</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

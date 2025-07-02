@@ -1,11 +1,3 @@
-# -----------------------------------------------------------------------------
-# BLOQUE 1: IMPORTACIONES Y CONFIGURACIÓN INICIAL
-# -----------------------------------------------------------------------------
-
-# Esta línea especifica que el script puede ser ejecutado directamente como programa
-#!/usr/bin/env python3
-
-# Permite usar anotaciones de tipo más avanzadas con compatibilidad hacia versiones anteriores
 from __future__ import annotations
 
 # Importa el tipo Fraction para trabajar con números racionales exactos (evita errores de punto flotante)
@@ -15,13 +7,14 @@ from fractions import Fraction
 import io, base64
 
 # Importación de tipos para anotaciones de parámetros y retorno de funciones
-from typing import List, Tuple, Sequence, Dict
+from typing import List, Tuple, Sequence, Dict, Union
 
 # Importa numpy para cálculos numéricos con arrays y matrices
 import numpy as np
 
 # Importa matplotlib para generar gráficas (usado en la representación gráfica de la región factible)
 import matplotlib.pyplot as plt
+
 
 # Define una constante muy grande que representa el valor de "M" en el método de la Gran M
 # Esta constante se usa para penalizar artificiales simbólicamente cuando se convierte a valor numérico
@@ -103,29 +96,27 @@ class MixedValue:
         if self.a!=0:
             sign = "" if not parts else ("+" if self.a>0 else "")
             parts.append(f"{sign}{self.a}")
-        return "".join(parts) or "0" # Retorna "0" si ambos son cero
+        return "".join(parts) or "0" 
 
-# # -----------------------------------------------------------------------------
-# BLOQUE 3: FUNCIÓN build_bigM_tableau – Construcción del tableau inicial
-# -----------------------------------------------------------------------------
 
-# Esta función construye el tableau (matriz aumentada) inicial para resolver
-# un problema de programación lineal con restricciones de cualquier tipo (≤, ≥, =)
-# usando el método de la Gran M. Se agregan variables de holgura, exceso y artificiales
-# según sea necesario, y se arma también la fila Z–Cj para la fase I.
 def build_bigM_tableau(minimize, n, m, obj, cons, types, rhs):
+    # Cuenta cuántas restricciones son de cada tipo:
     s_count = sum(1 for t in types if t == "<=")
     e_count = sum(1 for t in types if t == ">=")
     a_count = sum(1 for t in types if t in (">=", "="))
 
+    # total columnas = variables reales + s + e + a + columna b (RHS)
     total = n + s_count + e_count + a_count + 1
+
+    # Posiciones donde empiezan cada bloque de variables
     pos_s = n
     pos_e = n + s_count
     pos_a = n + s_count + e_count
-    pos_b = total - 1
+    pos_b = total - 1  # última columna
 
+    # Construye la cabecera del tableau
     headers = (
-        [f"x{i+1}" for i in range(n)] 
+        [f"x{i+1}" for i in range(n)]
         + [f"s{i+1}" for i in range(s_count)]
         + [f"e{i+1}" for i in range(e_count)]
         + [f"a{i+1}" for i in range(a_count)]
@@ -134,20 +125,25 @@ def build_bigM_tableau(minimize, n, m, obj, cons, types, rhs):
 
     tableau = []
     basis = []
-    si = ei = ai = 0
+    si = ei = ai = 0  # contadores para s, e, a
 
     for i, t in enumerate(types):
+        # ─── [CORRECCIÓN 1] Normalización de RHS negativo ───
         if rhs[i] < 0:
             cons[i] = [-c for c in cons[i]]
             rhs[i] = -rhs[i]
             t = {"<=": ">=", ">=": "<=", "=": "="}[t]
             types[i] = t
 
+        # Inicializar fila con MixedValue
         row = [MixedValue(0, 0) for _ in range(total)]
+
+        # Coeficientes de variables reales
         for j in range(n):
             row[j] = MixedValue(cons[i][j], 0)
         row[pos_b] = MixedValue(rhs[i], 0)
 
+        # ─── [CORRECCIÓN 2] Manejo preciso de variables ───
         if t == "<=":
             row[pos_s + si] = MixedValue(1, 0)
             basis.append(f"s{si+1}")
@@ -162,86 +158,211 @@ def build_bigM_tableau(minimize, n, m, obj, cons, types, rhs):
             row[pos_a + ai] = MixedValue(1, 0)
             basis.append(f"a{ai+1}")
             ai += 1
-            
+
         tableau.append(row)
 
-    M = 10**6
-    Cj = [MixedValue(c, 0) for c in obj] + [MixedValue(0, 0)]*(s_count + e_count) + [MixedValue(0, M if minimize else -M)]*a_count + [MixedValue(0, 0)]
-    Cb = [MixedValue(0, M if minimize else -M) if b.startswith("a") else MixedValue(0, 0) for b in basis]
+    # ─── [CORRECCIÓN 3] Construcción precisa de Z – Cj ───
+    M = 10**6  # Valor grande para M
 
+    # Coeficientes de la función objetivo
+    Cj = [MixedValue(c, 0) for c in obj]  # Variables reales
+    Cj += [MixedValue(0, 0)] * (s_count + e_count)  # Holgura y exceso
+    Cj += [MixedValue(0, M if minimize else -M)] * a_count  # Artificiales
+    Cj += [MixedValue(0, 0)]  # RHS
+
+    # Coeficientes básicos (Cb)
+    Cb = []
+    for b in basis:
+        if b.startswith("a"):
+            Cb.append(MixedValue(0, M if minimize else -M))
+        else:
+            Cb.append(MixedValue(0, 0))
+
+    # Cálculo de Zj
     Zj = [MixedValue(0, 0) for _ in range(total)]
     for j in range(total):
         for i in range(m):
             Zj[j] += Cb[i] * tableau[i][j]
 
+    # Z – Cj
     Zc = [Zj[j] - Cj[j] for j in range(total)]
     tableau.append(Zc)
 
     return tableau, basis, headers
 
+def simplex_solve(
+    minimize: bool, # True para minimizar, False para maximizar
+    n: int, # Cantidad de variables reales (x1, x2, ...)
+    m: int, # Cantidad de restricciones
+    obj: Sequence[float], # Coeficientes de la función objetivo
+    cons: Sequence[Sequence[float]], # Coeficientes de las restricciones (matriz A)
+    types: Sequence[str], # Tipos de restricciones: "<=", ">=", "="
+    rhs: Sequence[float], # Lado derecho de las restricciones (vector b)
+) -> Tuple[Dict[str, float], float, List[Dict]]:
+     # ─── FASE I: construir el tableau extendido con variables artificiales ───
+    tableau, basis, headers = build_bigM_tableau(minimize, n, m, obj, cons, types, rhs)
+    historial: List[Dict] = [] # Para guardar todas las iteraciones
+    it = 0 # contador de iteraciones
+
+    # --- Fase I: eliminar artificiales --------------------------
+    while it < MAX_ITERS:
+        it += 1
+        snap = {
+            "tabla": [[str(v) for v in row] for row in tableau],
+            "basis": basis.copy(),
+            "headers": headers.copy(),
+            "pivote": None,
+            "operaciones_filas": []
+        }
+        historial.append(snap)
+
+        # Verifica si aún hay variables artificiales en la base
+        art = any(b.startswith("a") for b in basis)
+
+        # Verifica si ya se alcanzó un óptimo en Fase I
+        zrow = tableau[-1]
+        better = (lambda v: v.is_positive()) if minimize else (lambda v: v.is_negative())
+        if not any(better(zrow[j]) and headers[j] not in basis
+                   for j in range(len(zrow)-1)):
+            # si hay artificial con b≠0 → infactible
+            if art and any(basis[i].startswith("a") and tableau[i][-1].a != 0
+                           for i in range(m)):
+                snap.update({"error":"No existe solución factible","infeasible":True})
+                return None, None, historial
+            break # fin de la Fase I
+
+        # ─── Selección del pivote ───
+        pr = pc = None
+
+        # Si hay artificiales en la base, priorizamos eliminarlas
+        if art:
+            for i,b in enumerate(basis):
+                if b.startswith("a"):
+                    for j in range(len(headers)-1):
+                        if (not headers[j].startswith("a")
+                            and tableau[i][j].is_positive()
+                            and headers[j] not in basis):
+                            pr, pc = i, j
+                            break
+                    if pr is not None: break
+
+        # Si no se encontró pivote preferente, usar método clásico
+        if pr is None:
+            pr, pc = find_pivot(tableau, basis, headers, minimize)
+            if pr is None:
+                break # óptimo alcanzado
+
+        # ─── Pivoteo: normalización y eliminación ───
+        piv = tableau[pr][pc]
+        old = tableau[pr].copy()
+        new = [v / piv for v in old]
+        labels = headers + ["b"]
+        ops = [f"Fila {pr+1} normalizada: " +
+               "; ".join(f"{labels[j]}: {float(old[j]):.4f} ÷ {float(piv):.4f} = {float(new[j]):.4f}"
+                         for j in range(len(old)))]
+        tableau[pr] = new
+        for i in range(len(tableau)):
+            if i == pr: continue
+            fct   = tableau[i][pc]
+            old_i = tableau[i].copy()
+            new_i = [old_i[j] - fct * tableau[pr][j] for j in range(len(old_i))]
+            ops.append(f"Fila {i+1} actualizada: " +
+                       "; ".join(f"{labels[j]}: {float(old_i[j]):.4f} − {float(fct):.4f}×{float(tableau[pr][j]):.4f} = {float(new_i[j]):.4f}"
+                                 for j in range(len(old_i))))
+            tableau[i] = new_i
+
+        # Actualización de la base
+        leaving, entering = basis[pr], headers[pc]
+        basis[pr] = entering
+        snap["pivote"] = {"fila": pr, "col": pc, "entra": entering, "sale": leaving}
+        snap["operaciones_filas"] = ops
+
+    # --- Comprobación de infactibilidad tras Fase I (solo si quedan a) ---
+    if any(b.startswith("a") for b in basis):
+        fase1_val = tableau[-1][-1]
+        if fase1_val.a != 0 or fase1_val.b != 0:
+            historial[-1].update({
+                "error":      "No existe solución factible",
+                "infeasible": True
+            })
+            return None, None, historial
+
+    # ─── FASE II: eliminar columnas artificiales y reconstruir Z – Cj ───
+
+    # Se eliminan columnas correspondientes a variables artificiales
+    arti_cols = [i for i,h in enumerate(headers) if h.startswith("a")]
+    for c in sorted(arti_cols, reverse=True):
+        for row in tableau:
+            del row[c]
+        del headers[c]
+
+    # reconstruir fila Z–Cj con coeficientes originales
+    Cj = [MixedValue(c,0) for c in obj] \
+         + [MixedValue(0,0)]*(len(headers)-n-1) \
+         + [MixedValue(0,0)]
+    Cb = [MixedValue(obj[int(b[1:])-1],0) if b.startswith("x") else MixedValue(0,0)
+          for b in basis]
+
+    # Se recalcula Zj y Z – Cj para comenzar la Fase II
+    Zj = []
+    for j in range(len(headers)):
+        s = MixedValue(0,0)
+        for i in range(len(basis)):
+            s += Cb[i] * tableau[i][j]
+        Zj.append(s)
+    Zc = [Zj[j] - Cj[j] for j in range(len(headers))]
+    tableau[-1] = Zc
+
+    # ─── Iteraciones Fase II para encontrar solución óptima ───
+    while True:
+        pr, pc = find_pivot(tableau, basis, headers, minimize)
+        if pr is None:
+            break
+
+        # pivoteo Fase II
+        piv = tableau[pr][pc]
+        old = tableau[pr].copy()
+        new = [v / piv for v in old]
+        labels = headers.copy()
+        ops = [f"(FII) F{pr+1}Norm: " +
+               "; ".join(f"{labels[j]}: {float(old[j]):.4f} ÷ {float(piv):.4f} = {float(new[j]):.4f}"
+                         for j in range(len(old)))]
+        tableau[pr] = new
+        for i in range(len(tableau)):
+            if i == pr: continue
+            fct   = tableau[i][pc]
+            old_i = tableau[i].copy()
+            new_i = [old_i[j] - fct * tableau[pr][j] for j in range(len(old_i))]
+            ops.append(f"(FII) F{i+1}Act: " +
+                       "; ".join(f"{labels[j]}: {float(old_i[j]):.4f} − {float(fct):.4f}×{float(tableau[pr][j]):.4f} = {float(new_i[j]):.4f}"
+                                 for j in range(len(old_i))))
+            tableau[i] = new_i
+
+        # Actualización de la base
+        leaving, entering = basis[pr], headers[pc]
+        basis[pr] = entering
+        historial.append({
+            "tabla":   [[str(v) for v in row] for row in tableau],
+            "basis":   basis.copy(),
+            "headers": headers.copy(),
+            "pivote":  {"fila": pr, "col": pc, "entra": entering, "sale": leaving},
+            "operaciones_filas": ops
+        })
+
+    # ───  Extraer solución final ───
+    sol = {f"x{i+1}": 0.0 for i in range(n)} # inicializa todas las x en 0
+    for i,b in enumerate(basis):
+        if b.startswith("x"):
+            sol[b] = float(tableau[i][-1])
+    z = float(tableau[-1][-1]) # valor óptimo de la función objetivo
+    if minimize:
+        z = -z # se corrige el signo para reflejar correctamente Z
+    return sol, z, historial # retorna solución, valor óptimo y pasos
+
 def find_pivot(tableau, basis, headers, minimize):
-    m = len(tableau) - 1
-    z_row = tableau[-1]
-    
-    def is_improving(val):
-        if minimize:
-            return val.is_positive()
-        return val.is_negative()
-
-    candidates = []
-    for j in range(len(z_row)-1):
-        if headers[j] not in basis and is_improving(z_row[j]):
-            priority = (z_row[j].b, abs(z_row[j].a), -j)
-            candidates.append((priority, j))
-    
-    if not candidates:
-        return None, None
-    
-    pc = min(candidates, key=lambda x: x[0])[1]
-
-    ratios = []
-    for i in range(m):
-        a_ij = tableau[i][pc]
-        if a_ij.is_positive():
-            try:
-                ratio = tableau[i][-1] / a_ij
-                ratios.append((float(ratio), i))
-            except ZeroDivisionError:
-                continue
-    
-    if not ratios:
-        raise Exception("El problema es no acotado")
-    
-    pr = min(ratios, key=lambda x: (x[0], x[1]))[1]
-    return pr, pc
-
-
-# -----------------------------------------------------------------------------
-# BLOQUE 4: FUNCIÓN find_pivot – Selección del elemento pivote (Gran M)
-# -----------------------------------------------------------------------------
-
-# Esta función se utiliza durante las iteraciones del método Símplex (fase I o II)
-# para seleccionar la posición del elemento pivote. El pivote es el valor central
-# alrededor del cual se harán transformaciones para acercarse a la solución óptima.
-def find_pivot(tableau, basis, headers, minimize):
-    """
-    Encuentra el elemento pivote para la iteración actual del método Simplex.
-    
-    Args:
-        tableau: Matriz completa del tableau
-        basis: Lista de variables básicas actuales
-        headers: Nombres de las columnas
-        minimize: Booleano que indica si es problema de minimización
-        
-    Returns:
-        Tuple (pr, pc): Fila y columna del pivote, o (None, None) si es óptimo
-        
-    Raises:
-        Exception: Si el problema es no acotado
-    """
     m = len(tableau) - 1  # Número de restricciones (excluyendo fila Z)
     z_row = tableau[-1]   # Fila Z - Cj
-    
+
     # ─── [MEJORA 1] Selección más robusta de columna pivote ───
     def is_improving(val):
         """Determina si un valor Z-Cj mejora la solución"""
@@ -260,10 +381,10 @@ def find_pivot(tableau, basis, headers, minimize):
                 -j  # Finalmente índice (para desempate)
             )
             candidates.append((priority, j))
-    
+
     if not candidates:
         return None, None  # Solución óptima alcanzada
-    
+
     # [MEJORA 3] Selección por mayor mejora potencial
     pc = min(candidates, key=lambda x: x[0])[1]
 
@@ -278,22 +399,15 @@ def find_pivot(tableau, basis, headers, minimize):
                 ratios.append((float(ratio), i))
             except ZeroDivisionError:
                 continue
-    
+
     if not ratios:
         raise Exception("El problema es no acotado")
-    
+
     # Seleccionamos la fila con menor ratio (usamos índice como desempate)
     pr = min(ratios, key=lambda x: (x[0], x[1]))[1]
-    
+
     return pr, pc
 
-# -----------------------------------------------------------------------------
-# BLOQUE 5: FUNCIÓN simplex_estandar – Método Símplex estándar (solo ≤)
-# -----------------------------------------------------------------------------
-
-# Esta función resuelve un problema de programación lineal utilizando el método
-# Símplex estándar, que solo permite restricciones del tipo ≤.
-# No utiliza variables artificiales ni la técnica de la Gran M.
 def simplex_estandar(
     minimize: bool, # True si se desea minimizar, False si se desea maximizar
     n: int, # Cantidad de variables reales (x1, x2, ...)
@@ -321,7 +435,7 @@ def simplex_estandar(
     # Construir restricciones
     for i in range(m):
         row = [Fraction(0)]*(total+1)
-        for j in range(n): 
+        for j in range(n):
             row[j] = Fraction(cons[i][j]).limit_denominator()
         row[n+i] = Fraction(1)
         row[-1] = Fraction(rhs[i]).limit_denominator()
@@ -344,8 +458,8 @@ def simplex_estandar(
 
     # ─── Ciclo principal de iteraciones ───
     while True:
-        # Buscar posición del pivote
-        pr, pc = find_pivot_frac(tableau, minimize, basis, headers)
+        # Buscar posición del pivote (modificado para usar solo 3 argumentos)
+        pr, pc = find_pivot_frac(tableau, basis, headers)
 
         if pr is None:
             if extra: break
@@ -367,7 +481,7 @@ def simplex_estandar(
             f = Fraction(val).limit_denominator()
             return f"{f.numerator}/{f.denominator}" if f.denominator != 1 else f"{f.numerator}"
 
-        divs = [f"{labels[j]}: {format_val(old[j])}÷{format_val(piv)}={format_val(new[j])}" 
+        divs = [f"{labels[j]}: {format_val(old[j])}÷{format_val(piv)}={format_val(new[j])}"
                for j in range(len(old))]
         ops.append(f"Fila{pr+1}Norm:\n" + "\n".join(divs))
         tableau[pr] = new
@@ -398,221 +512,48 @@ def simplex_estandar(
         })
 
     # ─── Obtener solución final ───
-    sol = {f"x{i+1}": float(tableau[basis.index(f"x{i+1}")][-1]) 
+    sol = {f"x{i+1}": float(tableau[basis.index(f"x{i+1}")][-1])
           if f"x{i+1}" in basis else 0.0 for i in range(n)}
-    
+
     z = float(tableau[-1][-1])
     if minimize:
         z = -z
 
     return sol, z, historial
 
-# -----------------------------------------------------------------------------
-# BLOQUE 6: FUNCIÓN find_pivot_frac – Selección de pivote con fracciones
-# -----------------------------------------------------------------------------
-
-# Esta función es utilizada específicamente por simplex_estandar, donde todos los valores
-# del tableau son del tipo Fraction (racionales exactos).
-# Selecciona la fila y columna del pivote según la lógica del método Símplex.
-def find_pivot_frac(tableau, minimize, basis, headers):
+def find_pivot_frac(
+    tableau: List[List[Fraction]],
+    basis: List[str],
+    headers: List[str]
+) -> Tuple[int, int]:
     """
-    Encuentra el pivote para el método simplex (maneja fracciones y problemas no acotados).
-    
-    Args:
-        tableau: Matriz del tableau (incluyendo la fila Z).
-        minimize: Booleano (True si es minimización, False para maximización).
-        basis: Conjunto de variables básicas actuales (ej: {'s₁', 's₂'}).
-        headers: Lista de nombres de columnas (ej: ['x₁', 'x₂', 's₁', 'Solución']).
-    
-    Returns:
-        (row_pivot, col_pivot): Índices del pivote (fila, columna).
-    
-    Raises:
-        Exception: Si el problema es no acotado.
+    Selecciona pivote para maximización: columna con coeficiente Z-Cj más negativo
+    y fila por test de razón mínima.
     """
-    m = len(tableau) - 1  # Número de restricciones (filas sin contar Z)
-    z_row = tableau[-1]   # Fila Z (última fila del tableau)
+    m = len(tableau) - 1  # número de restricciones
+    z_row = tableau[-1]
 
-    # Paso 1: Selección de columna pivote (variable entrante)
-    if minimize:
-        # Minimización: elige el coeficiente MÁS POSITIVO en Z (para reducir Z)
-        col_pivot = next(
-            (j for j in range(len(z_row)-1) if z_row[j] > 0 and headers[j] not in basis),
-            None
-        )
-    else:
-        # Maximización: elige el coeficiente MÁS NEGATIVO en Z (para aumentar Z)
-        col_pivot = next(
-            (j for j in range(len(z_row)-1) if z_row[j] < 0 and headers[j] not in basis),
-            None
-        )
-
-    # Si no hay coeficientes válidos, solución óptima alcanzada
-    if col_pivot is None:
+    # Columna pivote: coeficiente más negativo en Z-Cj
+    candidates = [(z_row[j], j) for j in range(len(z_row)-1)
+                  if z_row[j] < 0 and headers[j] not in basis]
+    if not candidates:
         return None, None
+    _, col_pivot = min(candidates, key=lambda x: x[0])
 
-    # Paso 2: Selección de fila pivote (razón mínima positiva)
-    ratios = []
-    for i in range(m):
-        a_ij = tableau[i][col_pivot]
-        if a_ij > 0:  # Solo considerar valores positivos
-            ratio = tableau[i][-1] / a_ij  # b_i / a_ij
-            ratios.append((ratio, i))
-
+    # Fila pivote: razón mínima
+    ratios = [(tableau[i][-1] / tableau[i][col_pivot], i)
+              for i in range(m) if tableau[i][col_pivot] > 0]
     if not ratios:
-        raise Exception("Problema no acotado: no hay ratios válidos")
+        raise Exception("Problema no acotado")
 
-    # Elegir la fila con la razón mínima
-    row_pivot = min(ratios, key=lambda x: x[0])[1]
+    _, row_pivot = min(ratios, key=lambda x: x[0])
     return row_pivot, col_pivot
-# -----------------------------------------------------------------------------
-# BLOQUE 7: FUNCIÓN simplex_solve – Método de la Gran M completo (Fase I y II)
-# -----------------------------------------------------------------------------
-
-# Esta función resuelve un problema de programación lineal usando el método Símplex
-# con la técnica de la Gran M. Admite restricciones de tipo <=, >= y =.
-# Ejecuta dos fases:
-#   - Fase I: Elimina variables artificiales.
-#   - Fase II: Optimiza el problema original con las variables válidas.
-def simplex_solve(minimize, n, m, obj, cons, types, rhs):
-    tableau, basis, headers = build_bigM_tableau(minimize, n, m, obj, cons, types, rhs)
-    historial = []
-    it = 0
-
-    while it < MAX_ITERS:
-        it += 1
-        snap = {
-            "tabla": [[str(v) for v in row] for row in tableau],
-            "basis": basis.copy(),
-            "headers": headers.copy(),
-            "pivote": None,
-            "operaciones_filas": []
-        }
-        historial.append(snap)
-
-        art = any(b.startswith("a") for b in basis)
-        zrow = tableau[-1]
-        better = (lambda v: v.is_positive()) if minimize else (lambda v: v.is_negative())
-        
-        if not any(better(zrow[j]) and headers[j] not in basis for j in range(len(zrow)-1)):
-            if art and any(basis[i].startswith("a") and tableau[i][-1].a != 0 for i in range(m)):
-                snap.update({"error":"No existe solución factible","infeasible":True})
-                return None, None, historial
-            break
-
-        pr = pc = None
-        if art:
-            for i,b in enumerate(basis):
-                if b.startswith("a"):
-                    for j in range(len(headers)-1):
-                        if (not headers[j].startswith("a") and tableau[i][j].is_positive() and headers[j] not in basis):
-                            pr, pc = i, j
-                            break
-                    if pr is not None: break
-
-        if pr is None:
-            pr, pc = find_pivot(tableau, basis, headers, minimize)
-            if pr is None:
-                break
-
-        piv = tableau[pr][pc]
-        old = tableau[pr].copy()
-        new = [v / piv for v in old]
-        labels = headers + ["b"]
-        ops = [f"Fila {pr+1} normalizada: " + "; ".join(f"{labels[j]}: {float(old[j]):.4f} ÷ {float(piv):.4f} = {float(new[j]):.4f}" for j in range(len(old)))]
-        tableau[pr] = new
-        
-        for i in range(len(tableau)):
-            if i == pr: continue
-            fct = tableau[i][pc]
-            old_i = tableau[i].copy()
-            new_i = [old_i[j] - fct * tableau[pr][j] for j in range(len(old_i))]
-            ops.append(f"Fila {i+1} actualizada: " + "; ".join(f"{labels[j]}: {float(old_i[j]):.4f} − {float(fct):.4f}×{float(tableau[pr][j]):.4f} = {float(new_i[j]):.4f}" for j in range(len(old_i))))
-            tableau[i] = new_i
-
-        leaving, entering = basis[pr], headers[pc]
-        basis[pr] = entering
-        snap["pivote"] = {"fila": pr, "col": pc, "entra": entering, "sale": leaving}
-        snap["operaciones_filas"] = ops
-
-    if any(b.startswith("a") for b in basis):
-        fase1_val = tableau[-1][-1]
-        if fase1_val.a != 0 or fase1_val.b != 0:
-            historial[-1].update({"error": "No existe solución factible", "infeasible": True})
-            return None, None, historial
-
-    arti_cols = [i for i,h in enumerate(headers) if h.startswith("a")]
-    for c in sorted(arti_cols, reverse=True):
-        for row in tableau:
-            del row[c]
-        del headers[c]
-
-    Cj = [MixedValue(c,0) for c in obj] + [MixedValue(0,0)]*(len(headers)-n-1) + [MixedValue(0,0)]
-    Cb = [MixedValue(obj[int(b[1:])-1],0) if b.startswith("x") else MixedValue(0,0) for b in basis]
-
-    Zj = []
-    for j in range(len(headers)):
-        s = MixedValue(0,0)
-        for i in range(len(basis)):
-            s += Cb[i] * tableau[i][j]
-        Zj.append(s)
-    Zc = [Zj[j] - Cj[j] for j in range(len(headers))]
-    tableau[-1] = Zc
-
-    while True:
-        pr, pc = find_pivot(tableau, basis, headers, minimize)
-        if pr is None:
-            break
-
-        piv = tableau[pr][pc]
-        old = tableau[pr].copy()
-        new = [v / piv for v in old]
-        labels = headers.copy()
-        ops = [f"(FII) F{pr+1}Norm: " + "; ".join(f"{labels[j]}: {float(old[j]):.4f} ÷ {float(piv):.4f} = {float(new[j]):.4f}" for j in range(len(old)))]
-        tableau[pr] = new
-        
-        for i in range(len(tableau)):
-            if i == pr: continue
-            fct = tableau[i][pc]
-            old_i = tableau[i].copy()
-            new_i = [old_i[j] - fct * tableau[pr][j] for j in range(len(old_i))]
-            ops.append(f"(FII) F{i+1}Act: " + "; ".join(f"{labels[j]}: {float(old_i[j]):.4f} − {float(fct):.4f}×{float(tableau[pr][j]):.4f} = {float(new_i[j]):.4f}" for j in range(len(old_i))))
-            tableau[i] = new_i
-
-        leaving, entering = basis[pr], headers[pc]
-        basis[pr] = entering
-        historial.append({
-            "tabla": [[str(v) for v in row] for row in tableau],
-            "basis": basis.copy(),
-            "headers": headers.copy(),
-            "pivote": {"fila": pr, "col": pc, "entra": entering, "sale": leaving},
-            "operaciones_filas": ops
-        })
-
-    sol = {f"x{i+1}": 0.0 for i in range(n)}
-    for i,b in enumerate(basis):
-        if b.startswith("x"):
-            sol[b] = float(tableau[i][-1])
-    z = float(tableau[-1][-1])
-    if minimize:
-        z = -z
-    return sol, z, historial
 
 
-
-
-
-# -----------------------------------------------------------------------------
-# BLOQUE 8: FUNCIÓN plot_feasible_region – Graficar región factible (solo n=2)
-# -----------------------------------------------------------------------------
-
-# Esta función genera una imagen (codificada en base64) que representa la región factible
-# del problema de programación lineal cuando hay exactamente 2 variables (x1 y x2).
-# También muestra las restricciones como líneas y el punto óptimo encontrado.
 def plot_feasible_region(obj, cons, types, rhs, sol):
     if len(obj)!=2: return None # Solo se puede graficar en 2 dimensiones
 
-    # Se generan valores para el eje x1 desde 0 hasta un 50% más que el óptimo    
+    # Se generan valores para el eje x1 desde 0 hasta un 50% más que el óptimo
     x1=np.linspace(0,sol["x1"]*1.5+1,400)
     x2=np.linspace(0,sol["x2"]*1.5+1,400)
 
@@ -627,9 +568,9 @@ def plot_feasible_region(obj, cons, types, rhs, sol):
         A,B=c; # Coeficientes de la restricción A*x1 + B*x2
 
         # Se aplica la condición correspondiente sobre la malla
-        if t=="<=": 
+        if t=="<=":
             feas&=(A*X1+B*X2<=b+1e-6) # margen de tolerancia numérica
-        elif t==">=": 
+        elif t==">=":
             feas&=(A*X1+B*X2>=b-1e-6)
         else: # igualdad
             feas&=(abs(A*X1+B*X2-b)<=1e-6)
@@ -641,13 +582,13 @@ def plot_feasible_region(obj, cons, types, rhs, sol):
     # Se dibujan todas las restricciones como líneas
     for (c,t,b) in zip(cons,types,rhs):
         A,B=c
-        if B!=0: 
+        if B!=0:
             # Se despeja x2 y se grafica en función de x1
             plt.plot(x1,(b-A*x1)/B,label=f"{A}x1+{B}x2 {t} {b}")
-        else: 
+        else:
             # Caso especial: restricción vertical (solo x1 involucrada)
             plt.axvline(x=b/A,label=f"{A}x1 {t} {b}")
-    
+
     # Se marca el punto óptimo encontrado
     plt.plot(sol["x1"],sol["x2"],"ro",label="Óptimo")
 

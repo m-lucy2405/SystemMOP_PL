@@ -11,7 +11,7 @@ from django.utils.translation import gettext as _
 from .models import PerfilUsuario
 from .forms import PerfilUsuarioForm, CambiarUsuarioForm, CambiarContrasenaForm
 from apps.metodo_simplex.models import SimplexProblem
-# from apps.metodo_grafico.models import GraficoProblem  # Si lo vas a usar luego
+from apps.metodo_grafico.models import GraficoProblem  # Si lo vas a usar luego
 
 # ----------------------------------------
 # VISTA LOGIN
@@ -111,12 +111,13 @@ def perfil_view(request):
         pass
     perfil, _ = PerfilUsuario.objects.get_or_create(user=request.user)
     problemas_simplex = SimplexProblem.objects.filter(user=request.user).order_by('-fecha')
-    # problemas_grafico = GraficoProblem.objects.all().order_by('-fecha')
+    problemas_grafico = GraficoProblem.objects.filter(user=request.user).order_by('-fecha')
+    
 
     return render(request, 'perfil.html', {
         'perfil': perfil,
         'problemas_simplex': problemas_simplex,
-        # 'problemas_grafico': problemas_grafico,
+        'problemas_grafico': problemas_grafico,
     })
 
 

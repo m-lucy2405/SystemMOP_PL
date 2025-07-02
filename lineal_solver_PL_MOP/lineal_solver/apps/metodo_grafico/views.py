@@ -1,8 +1,6 @@
 from django.shortcuts import render
-from .forms import ProblemaGraficoForm
-from .grafico_solver import resolver_problema
-from .models import ProblemaGrafico
 import json
+from .grafico_solver import resolver_problema  # Asegúrate de tener esta función implementada
 
 def grafico_solver_view(request):
     resultado = None
@@ -10,37 +8,42 @@ def grafico_solver_view(request):
     optimo = None
 
     if request.method == 'POST':
-        form = ProblemaGraficoForm(request.POST)
-        if form.is_valid():
-            # Guardar problema inicial
-            problema = form.save(commit=False)
+        try:
+            n = int(request.POST.get('n', 2))  # Siempre 2 para método gráfico
+            m = int(request.POST.get('m', 2))
+            optim = request.POST.get('optim')
 
-            # Parsear JSON
-            restricciones = json.loads(form.cleaned_data['restricciones'])
-            funcion_objetivo = json.loads(form.cleaned_data['funcion_objetivo'])
+            # Obtener coeficientes de la función objetivo
+            obj = [float(request.POST.get(f'obj{i+1}', 0)) for i in range(n)]
 
-            # Resolver
-            try:
-                vertices, optimo = resolver_problema(restricciones, funcion_objetivo)
+            # Obtener restricciones
+            cons = []
+            types = []
+            rhs = []
+            for j in range(1, m+1):
+                cons.append([float(request.POST.get(f'cons{j}_{i+1}', 0)) for i in range(n)])
+                types.append(request.POST.get(f'type{j}'))
+                rhs.append(float(request.POST.get(f'rhs{j}', 0)))
 
-                # Guardar en modelo
-                problema.solucion_optima = optimo
-                problema.vertices_factibles = vertices
-                problema.save()
+            restricciones = []
+            for i in range(m):
+                restricciones.append({
+                    "lhs": cons[i],
+                    "sign": types[i],
+                    "rhs": rhs[i]
+                })
 
-                resultado = {
-                    'problema': problema,
-                    'vertices': vertices,
-                    'optimo': optimo,
-                }
-            except Exception as e:
-                form.add_error(None, f"Error al resolver: {e}")
+            # Resolver el problema gráfico
+            vertices, optimo = resolver_problema(restricciones, obj)
 
-    else:
-        form = ProblemaGraficoForm()
+            resultado = {
+                'vertices': vertices,
+                'optimo': optimo,
+            }
+        except Exception as e:
+            resultado = {'error': str(e)}
 
     context = {
-        'form': form,
         'resultado': resultado,
         'vertices': json.dumps(vertices) if vertices is not None else "[]",
         'optimo': json.dumps(optimo) if optimo is not None else "{}"

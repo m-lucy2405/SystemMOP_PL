@@ -73,7 +73,7 @@
         {% endif %}
       </div>
     {% endif %}
-
+    
     {% if resultado %}
       <div class="box-solution">
         <h2 class="box-solution-titulo">Solución óptima</h2>
@@ -86,7 +86,8 @@
         <p><strong>Z = {{ resultado.z|floatformat:4 }}</strong></p>
       </div>
     {% endif %}
-
+    
+    {% if user.is_authenticated %}
     {% if latex_sistema %}
       <div class="box-solution">
         <h2 class="box-solution-titulo">Planteamiento del problema</h2>
@@ -174,6 +175,13 @@
       </div>
     {% endif %}
   </div> <!-- /resultado-wrapper -->
+  {% else %}
+    <div class="box-solution">
+      <h2 class="box-solution-titulo">Inicia sesión para continuar</h2>
+      <p>Debes iniciar sesión si deseas ver los resultados completos del método Símplex.</p>
+    </div>
+  {% endif %}
+  <button onclick="window.print()" class="btn-imprimir">Imprimir o guardar como PDF</button>
 </section>
 
 {% endblock %}

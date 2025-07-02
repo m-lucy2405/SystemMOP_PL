@@ -102,9 +102,9 @@ def metodo_simplex_view(request):
                     print(f"Error generando gráfica: {e}")
 
             # ------------------------------------------------------------
-            # 7. Guardar en BD si todo fue bien
+            # 7. Guardar en BD si todo fue bien y el usuario está autenticado
             # ------------------------------------------------------------
-            if resultado and not error:
+            if resultado and not error and request.user.is_authenticated:
                 SimplexProblem.objects.create(
                     user=request.user,
                     optim=optim,
@@ -116,6 +116,7 @@ def metodo_simplex_view(request):
                     rhs=",".join(map(str, rhs)),
                     resultado=json.dumps(resultado),
                 )
+
 
         except ValueError as ve:
             error = f"Datos numéricos inválidos: {ve}"

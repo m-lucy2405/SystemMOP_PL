@@ -185,6 +185,21 @@ th {
   margin: 0 auto;
 }
 
+/* -------------------- GRAFICA RESPONSIVA -------------------- */
+.btn-imprimir {
+  background-color: var(--color-oscuro);
+  border: none;
+  border-radius: 10px;
+  padding: 10px;
+  color: var(--color-claro);
+  cursor: pointer;
+  transition: background 0.2s ease;
+  width: 100%;
+  max-width: 200px;    /* Para que no sea demasiado ancho en pantallas grandes */
+  margin: 10px auto;   /* Centra horizontalmente y margen arriba y abajo */
+  text-align: center;
+}
+
 /* -------------------- RESPONSIVO -------------------- */
 @media (max-width: 576px) {
   html, body {
@@ -241,76 +256,86 @@ th {
     height: auto;
     max-width: 100%;
   }
+
+  .btn-imprimir {
+    max-width: 100%;      /* Que ocupe todo el ancho posible */
+    padding: 0.75rem 1rem; /* Ajusta el padding para mejor toque */
+    font-size: 1rem;       /* Aumenta un poco el tamaño de texto */
+  }
 }
 
-@media (min-width: 577px) and (max-width: 1200px) {
+@media print {
+  /* Redefinición de variables para colores */
+  :root {
+    --color-oscuro: #8D77AB;
+    --color-primario: #BAD8B6;
+    --color-secundario: #E1EACD;
+    --color-claro: #F9F6E6;
+    --color-blanco: #ffffff;
+    --color-negro: #000000;
+    --color-gris: #c0c0c0;
+  }
+
+  /* Oculta navegación, botones y otros elementos no deseados en impresión */
+  nav, footer, .translate-buttons, .btn, .botones-simplex, .btn-limpiar, .btn-resolver, .btn-imprimir {
+    display: none !important;
+  }
+
+  /* Estilos generales para impresión */
   html, body {
-    overflow-x: hidden;
-    width: 100%;
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+    color: black !important;
   }
 
-  .contenedor-campos,
-  .box-solution,
-  #resultado-wrapper,
-  #campos,
-  .tabla-wrapper {
-    width: 100%;
-    max-width: 100vw;
-    overflow-x: auto;
-    box-sizing: border-box;
-  }
-
-  .fila-funcion,
-  .fila-restriccion {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding-bottom: 0.5rem;
-  }
-
-  .tabla-wrapper {
-    width: 100%;
-    overflow-x: auto;
-    padding: 0 1rem 1rem 1rem; /* margen interno a los lados */
-    box-sizing: border-box;
-  }
-
-  .tabla-resultante {
-    width: 100%;
-    min-width: unset;
-    border-collapse: collapse;
-    background-color: var(--color-secundario);
-    margin: 0 auto;
-    table-layout: fixed;
-  }
-
-  .tabla-resultante th,
-  .tabla-resultante td {
-    word-break: break-word;
-    overflow-wrap: break-word;
-  }
-
-  .botones-simplex,
-  .input-campos {
-    min-width: 70px;
-  }
-
+  /* Estilos para las cajas de solución con colores y bordes */
   .box-solution {
-    font-size: 0.95rem;
-    padding: 1rem;
-    padding-inline: 1.5rem;
-    margin: 1rem 0;
-    overflow-x: auto;
+    background: var(--color-primario) !important;
+    border-left: 5px solid var(--color-oscuro) !important;
+    page-break-inside: avoid !important;
+    margin-bottom: 20px;
+    padding: 10px;
   }
 
-  th, td {
-    padding: 6px;
-    font-size: 0.9rem;
+  .box-solution-titulo {
+    color: var(--color-oscuro) !important;
   }
 
-  .grafica-responsive {
-    width: 100%;
-    height: auto;
-    max-width: 100%;
+  .artificial {
+    background: var(--color-secundario) !important;
+    border-left: 2px solid var(--color-oscuro) !important;
+    padding: 8px;
+    margin: 5px 0;
+  }
+
+  /* Gráficas y tablas responsivas */
+  .grafica-responsive, img {
+    max-width: 100% !important;
+    height: auto !important;
+    page-break-inside: avoid !important;
+  }
+
+  /* Evita que tablas se rompan en medio */
+  .tabla-resultante, .tabla-resultante tr, .tabla-resultante td, .tabla-resultante th {
+    page-break-inside: avoid !important;
+  }
+
+  /* Evita que títulos se corten solos */
+  h1, h2, h3, h4, h5 {
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Elimina sombras o fondos que no se imprimen bien */
+  * {
+    box-shadow: none !important;
+    background-image: none !important;
+  }
+
+  /* Márgenes de la página */
+  @page {
+    margin: 1cm;
   }
 }
 

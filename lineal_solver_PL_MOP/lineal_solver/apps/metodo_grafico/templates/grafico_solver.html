@@ -50,6 +50,44 @@
     </div>
   </form>
 
+  {% if paso_a_paso %}
+    <div class="box-solution">
+      <h2 class="box-solution-titulo">Procedimiento paso a paso</h2>
+      <ol class="paso-a-paso-lista">
+        {% for paso in paso_a_paso %}
+          <li class="paso-a-paso-item">
+            <div class="paso-a-paso-titulo"><strong>{{ paso.titulo }}</strong></div>
+            <ul class="paso-a-paso-detalle">
+              {% if paso.contenido is iterable and not paso.contenido.items %}
+                {% for item in paso.contenido %}
+                  {% if item.items %}
+                    <li>
+                      {% for k, v in item.items %}
+                        <span class="paso-a-paso-label"><strong>{{ k }}:</strong></span>
+                        <span class="paso-a-paso-valor">{% if v|stringformat:"s"|slice:":2" == "\\(" or v|stringformat:"s"|slice:":2" == "\\[" %}{{ v|safe }}{% else %}{{ v }}{% endif %}</span>
+                      {% endfor %}
+                    </li>
+                  {% else %}
+                    <li>{% if item|stringformat:"s"|slice:":2" == "\\(" or item|stringformat:"s"|slice:":2" == "\\[" %}{{ item|safe }}{% else %}{{ item }}{% endif %}</li>
+                  {% endif %}
+                {% endfor %}
+              {% elif paso.contenido.items %}
+                {% for k, v in paso.contenido.items %}
+                  <li>
+                    <span class="paso-a-paso-label"><strong>{{ k }}:</strong></span>
+                    <span class="paso-a-paso-valor">{% if v|stringformat:"s"|slice:":2" == "\\(" or v|stringformat:"s"|slice:":2" == "\\[" %}{{ v|safe }}{% else %}{{ v }}{% endif %}</span>
+                  </li>
+                {% endfor %}
+              {% else %}
+                <li>{% if paso.contenido|stringformat:"s"|slice:":2" == "\\(" or paso.contenido|stringformat:"s"|slice:":2" == "\\[" %}{{ paso.contenido|safe }}{% else %}{{ paso.contenido }}{% endif %}</li>
+              {% endif %}
+            </ul>
+          </li>
+        {% endfor %}
+      </ol>
+    </div>
+  {% endif %}
+
   <div id="resultado-wrapper">
     {% if resultado and resultado.optimo %}
       <div class="box-solution">

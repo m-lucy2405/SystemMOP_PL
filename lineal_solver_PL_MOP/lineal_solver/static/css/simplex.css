@@ -313,3 +313,25 @@ th {
     max-width: 100%;
   }
 }
+
+.paso-a-paso-lista {
+  padding-left: 1.2em;
+}
+.paso-a-paso-item {
+  margin-bottom: 1.2em;
+}
+.paso-a-paso-titulo {
+  color: #6c3483;
+  font-size: 1.1em;
+  margin-bottom: 0.3em;
+}
+.paso-a-paso-detalle {
+  margin-left: 1em;
+  margin-bottom: 0.5em;
+}
+.paso-a-paso-label {
+  color: #2874a6;
+}
+.paso-a-paso-valor {
+  color: #212f3d;
+}

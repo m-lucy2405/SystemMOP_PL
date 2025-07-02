@@ -359,145 +359,152 @@ def find_pivot(tableau, basis, headers, minimize):
     return pr, pc
 
 def simplex_estandar(
-    minimize: bool, # True si se desea minimizar, False si se desea maximizar
-    n: int, # Cantidad de variables reales (x1, x2, ...)
-    m: int, # Cantidad de restricciones
-    obj: Sequence[float], # Lista de coeficientes de la función objetivo
-    cons: Sequence[Sequence[float]], # Matriz de coeficientes de restricciones (m x n)
-    types: Sequence[str], # Tipos de restricciones (solo se acepta '<=')
-    rhs: Sequence[float], # Lado derecho de las restricciones (vector b)
-) -> Tuple[dict,float,List[dict]]: # Retorna solución, valor óptimo y historial
+    minimize: bool,
+    n: int,
+    m: int,
+    obj: Sequence[float],
+    cons: Sequence[Sequence[float]],
+    types: Sequence[str],
+    rhs: Sequence[float],
+) -> Tuple[Dict[str, float], float, List[Dict]]:
 
-    from fractions import Fraction # Se usa para evitar errores de redondeo
+    # 1) Validaciones
+    if any(t != "<=" for t in types):
+        return None, None, [{"error": "Estándar sólo ≤"}]
+    if any(b < 0 for b in rhs):
+        return None, None, [{"error": "RHS < 0 no soportado"}]
 
-    # ─── Validaciones iniciales ───
-    if any(t!="<=" for t in types):
-        return None,None,[{"error":"Estándar sólo ≤"}]
-    if any(b<0 for b in rhs):
-        return None,None,[{"error":"RHS<0 no soportado"}]
-
-    # ─── Construcción del tableau ───
-    total = n+m
+    # 2) Encabezados y base
     headers = [f"x{i+1}" for i in range(n)] + [f"s{i+1}" for i in range(m)] + ["b"]
-    tableau = []
-    basis = [f"s{i+1}" for i in range(m)]
+    basis   = [f"s{i+1}" for i in range(m)]
 
-    # Construir restricciones
+    # 3) Construcción del tableau
+    tableau: List[List[Fraction]] = []
     for i in range(m):
-        row = [Fraction(0)]*(total+1)
-        for j in range(n):
-            row[j] = Fraction(cons[i][j]).limit_denominator()
-        row[n+i] = Fraction(1)
-        row[-1] = Fraction(rhs[i]).limit_denominator()
+        row = [Fraction(cons[i][j]).limit_denominator() for j in range(n)]
+        row += [Fraction(1) if i == j else Fraction(0) for j in range(m)]
+        row.append(Fraction(rhs[i]).limit_denominator())
         tableau.append(row)
 
-    # Fila Z – Cj inicial CORREGIDA (clave para el resultado correcto)
-    sign = -1 if not minimize else 1  # Maximización: signo negativo
-    zrow = [Fraction(obj[j]).limit_denominator() * sign for j in range(n)] + [Fraction(0)]*(m+1)
+    # 4) Fila Z–Cj inicial (siempre –Cj)
+    zrow = [-Fraction(obj[j]).limit_denominator() for j in range(n)]
+    zrow += [Fraction(0)] * (m + 1)
     tableau.append(zrow)
 
-    historial=[{
-        "tabla": [[str(c) for c in row] for row in tableau],
-        "basis": basis.copy(),
-        "headers": headers.copy(),
-        "pivote": None,
-        "operaciones_filas":[]
+    # 5) Histórico
+    historial: List[Dict] = [{
+        "tabla":           [[str(c) for c in row] for row in tableau],
+        "headers":         headers.copy(),
+        "basis":           basis.copy(),
+        "pivote":          None,
+        "operaciones_filas": []
     }]
 
-    extra = False
+    # 6) Funciones de pivoteo (solo x1…xn)
+    def find_pivot_min() -> Tuple[int,int]:
+        z = tableau[-1][:-1]
+        col = best = None
+        for j in range(n):
+            v = z[j]
+            if v < 0 and headers[j] not in basis and (best is None or v > best):
+                best, col = v, j
+        if col is None:
+            return None, None
+        ratios = [(tableau[i][-1] / tableau[i][col], i)
+                  for i in range(m) if tableau[i][col] > 0]
+        if not ratios:
+            raise Exception("Problema no acotado")
+        return min(ratios, key=lambda x: x[0])[1], col
 
-    # ─── Ciclo principal de iteraciones ───
+    def find_pivot_max() -> Tuple[int,int]:
+        z = tableau[-1][:-1]
+        col = best = None
+        for j in range(n):
+            v = z[j]
+            if v < 0 and headers[j] not in basis and (best is None or v < best):
+                best, col = v, j
+        if col is None:
+            return None, None
+        ratios = [(tableau[i][-1] / tableau[i][col], i)
+                  for i in range(m) if tableau[i][col] > 0]
+        if not ratios:
+            raise Exception("Problema no acotado")
+        return min(ratios, key=lambda x: x[0])[1], col
+
+    # 7) Bucle principal
     while True:
-        # Buscar posición del pivote (modificado para usar solo 3 argumentos)
-        pr, pc = find_pivot_frac(tableau, basis, headers)
-
+        pr, pc = (find_pivot_min() if minimize else find_pivot_max())
         if pr is None:
-            if extra: break
-            Zc = tableau[-1][:-1]
-            pc = next((j for j,v in enumerate(Zc) if v==0 and any(tableau[i][j]>0 for i in range(m))), None)
-            if pc is None: break
-            pr = min((tableau[i][-1]/tableau[i][pc],i) for i in range(m) if tableau[i][pc]>0)[1]
-            extra = True
+            break
 
-        # Pivoteo
         ops = []
         piv = tableau[pr][pc]
         old = tableau[pr].copy()
-        new = [v/piv for v in old]
-        labels = headers+["b"]
-
-        # Formateo mejorado de las operaciones
-        def format_val(val):
-            f = Fraction(val).limit_denominator()
-            return f"{f.numerator}/{f.denominator}" if f.denominator != 1 else f"{f.numerator}"
-
-        divs = [f"{labels[j]}: {format_val(old[j])}÷{format_val(piv)}={format_val(new[j])}"
-               for j in range(len(old))]
-        ops.append(f"Fila{pr+1}Norm:\n" + "\n".join(divs))
-        tableau[pr] = new
+        norm = [v / piv for v in old]
+        ops.append(
+            f"Fila{pr+1}Norm:\n" +
+            "\n".join(f"{headers[j]}: {old[j]}/{piv} = {norm[j]}"
+                      for j in range(len(old)))
+        )
+        tableau[pr] = norm
 
         for i in range(len(tableau)):
             if i == pr: continue
-            fct = tableau[i][pc]
+            f = tableau[i][pc]
             old_i = tableau[i].copy()
-            new_i = [old_i[j]-fct*tableau[pr][j] for j in range(len(old_i))]
-            subs = [f"{labels[j]}: {format_val(old_i[j])}−{format_val(fct)}×{format_val(tableau[pr][j])}={format_val(new_i[j])}"
-                   for j in range(len(old_i))]
-            ops.append(f"Fila{i+1}Act:\n" + "\n".join(subs))
+            new_i = [old_i[j] - f*tableau[pr][j] for j in range(len(old_i))]
+            ops.append(
+                f"Fila{i+1}Act:\n" +
+                "\n".join(f"{headers[j]}: {old_i[j]} - {f}×{tableau[pr][j]} = {new_i[j]}"
+                          for j in range(len(old_i)))
+            )
             tableau[i] = new_i
 
-        # Actualizar base
-        leaving = basis[pr]
+        leaving  = basis[pr]
         entering = headers[pc]
         basis[pr] = entering
-
-        historial[-1]["pivote"] = {"fila":pr, "col":pc, "entra":entering, "sale":leaving}
+        historial[-1]["pivote"] = {"fila": pr, "col": pc,
+                                   "entra": entering, "sale": leaving}
         historial[-1]["operaciones_filas"] = ops
         historial.append({
-            "tabla": [[str(c) for c in row] for row in tableau],
-            "basis": basis.copy(),
-            "headers": headers.copy(),
-            "pivote": None,
+            "tabla":           [[str(c) for c in row] for row in tableau],
+            "headers":         headers.copy(),
+            "basis":           basis.copy(),
+            "pivote":          None,
             "operaciones_filas": []
         })
 
-    # ─── Obtener solución final ───
-    sol = {f"x{i+1}": float(tableau[basis.index(f"x{i+1}")][-1])
-          if f"x{i+1}" in basis else 0.0 for i in range(n)}
-
-    z = float(tableau[-1][-1])
+    # 8) Solución
+    sol = {
+        f"x{i+1}": float(tableau[basis.index(f"x{i+1}")][-1])
+        if f"x{i+1}" in basis else 0.0
+        for i in range(n)
+    }
+    z_val = float(tableau[-1][-1])
+    # CORRECCIÓN FINAL: Z siempre positivo
     if minimize:
-        z = -z
+        Z = z_val
+    else:
+        Z = -z_val * -1
 
-    return sol, z, historial
+    return sol, Z, historial
 
-def find_pivot_frac(
-    tableau: List[List[Fraction]],
-    basis: List[str],
-    headers: List[str]
-) -> Tuple[int, int]:
-    """
-    Selecciona pivote para maximización: columna con coeficiente Z-Cj más negativo
-    y fila por test de razón mínima.
-    """
-    m = len(tableau) - 1  # número de restricciones
-    z_row = tableau[-1]
 
-    # Columna pivote: coeficiente más negativo en Z-Cj
-    candidates = [(z_row[j], j) for j in range(len(z_row)-1)
-                  if z_row[j] < 0 and headers[j] not in basis]
-    if not candidates:
-        return None, None
-    _, col_pivot = min(candidates, key=lambda x: x[0])
 
-    # Fila pivote: razón mínima
-    ratios = [(tableau[i][-1] / tableau[i][col_pivot], i)
-              for i in range(m) if tableau[i][col_pivot] > 0]
-    if not ratios:
-        raise Exception("Problema no acotado")
 
-    _, row_pivot = min(ratios, key=lambda x: x[0])
-    return row_pivot, col_pivot
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 def plot_feasible_region(obj, cons, types, rhs, sol):

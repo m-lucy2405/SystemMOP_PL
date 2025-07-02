@@ -10,6 +10,4 @@ urlpatterns = [
     path('usuario/', include('apps.usuarios.urls'), name='login'),
     path('simplex/', include('apps.metodo_simplex.urls')),
     path('grafico/', include('apps.metodo_grafico.urls')),
-    path('', views.home, name='home'),
-    path('usuario/', include('apps.usuarios.urls'), name='login'),
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

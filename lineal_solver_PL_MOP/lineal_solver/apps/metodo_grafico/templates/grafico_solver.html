@@ -1,41 +1,87 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
+
+{% block title %}Método Gráfico{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/simplex.css' %}">
+{% endblock %}
+
 
 {% block navbar_content %}
 {% include "bases/navbar.html" %}
-{% endblock navbar_content %}
+{% endblock %}
 {% block footer_content %}
 {% include "bases/footer.html" %}
-{% endblock footer_content %}
+{% endblock %}
 
 {% block section_content %}
+<section class="contenedor-simplex bg-simplex py-5" id="features">
+  <h1 class="titulo-simplex">Método Gráfico</h1>
+  <form method="post" autocomplete="off">
+    {% csrf_token %}
+    <div class="contenedor-campos">
+      <div class="tipo-optimizacion">
+        <label>Tipo de optimización:</label>
+        <select class="input-campos" name="optim">
+          <option value="max">Maximizar</option>
+          <option value="min">Minimizar</option>
+        </select>
+      </div>
 
+      <div class="numero-variables">
+        <label>Número de variables:</label>
+        <input class="input-campos" id="n" name="n" type="number" min="2" max="2" value="2" readonly>
+      </div>
 
-<h2>Resolver Problema por Método Gráfico</h2>
+      <div class="numero-restricciones">
+        <label>Número de restricciones:</label>
+        <input class="input-campos" id="m" name="m" type="number" min="1" max="10" value="2">
+      </div>
 
-<form method="post">
-  {% csrf_token %}
-  {{ form.as_p }}
-  <button type="submit">Resolver</button>
-</form>
+      <button class="botones-simplex" type="button" onclick="generarCamposGrafico()">Generar campos</button>
 
-{% if resultado %}
-<hr>
-<h3>Resultado Óptimo</h3>
-<p><strong>Coordenadas:</strong> ({{ resultado.optimo.x|floatformat:2 }}, {{ resultado.optimo.y|floatformat:2 }})</p>
-<p><strong>Valor función objetivo:</strong> {{ resultado.optimo.z|floatformat:2 }}</p>
+      <div id="campos-grafico"></div>
 
-<div id="grafico" style="width: 100%; height: 600px;"></div>
-<button id="download-png">Descargar PNG</button>
-<button id="download-pdf">Descargar PDF</button>
+      <div class="btn-resolver-limpiar">
+        <button class="botones-simplex btn-resolver contenedor-oculto" type="submit">Resolver</button>
+        <button class="botones-simplex btn-limpiar contenedor-oculto" type="button" onclick="limpiarFormularioGrafico()">Limpiar</button>
+      </div>
+    </div>
+  </form>
 
+  <div id="resultado-wrapper">
+    {% if resultado and resultado.optimo %}
+      <div class="box-solution">
+        <h2 class="box-solution-titulo">Solución óptima</h2>
+        <ul>
+          <li>x = {{ resultado.optimo.x|floatformat:4 }}</li>
+          <li>y = {{ resultado.optimo.y|floatformat:4 }}</li>
+        </ul>
+        <p><strong>Z = {{ resultado.optimo.z|floatformat:4 }}</strong></p>
+      </div>
 
-<script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-<script>
-  const vertices = JSON.parse('{{ vertices|escapejs }}');
-  const optimo = JSON.parse('{{ optimo|escapejs }}');
-  renderGraficoSolver(vertices, optimo);
-</script>
+      <div class="box-solution">
+        <h2 class="box-solution-titulo">Gráfica</h2>
+        <button id="download-png" class="botones-simplex" type="button">Descargar PNG</button>        
+        <div id="grafico" style="width:100%;min-width:800px;height:600px;"></div>
 
-{% endif %}
+        {% block extra_scripts %}
+        <script src="{% static 'js/grafico.js' %}"></script>
+        <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+        <script>
+          const vertices = JSON.parse('{{ vertices|escapejs }}');
+          const optimo = JSON.parse('{{ optimo|escapejs }}');
+          renderGraficoSolver(vertices, optimo);
+        </script>
+        {% endblock %}
+        
+      </div>
+      {% elif resultado and resultado.error %}
+      <div class="error-box">
+        <strong>Error:</strong> {{ resultado.error }}
+      </div>
+      {% endif %}
+  </div>
+</section>
 {% endblock %}

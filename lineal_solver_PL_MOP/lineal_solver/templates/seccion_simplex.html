@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Ejemplo Resuelto - Método Simplex{% endblock %}
+
+{% block section_content %}
+<div class="container py-5 bg-light rounded-4 border shadow" style="max-width: 900px;">
+
+  <h2 class="text-center text-success mb-4 fw-bold">Ejercicio Resuelto – Método Simplex</h2>
+
+  <h3 class="text-primary fw-semibold border-bottom pb-2 mt-4">¿Qué es el Método Simplex?</h3>
+  <div class="bg-white border-start border-4 border-success p-3 rounded mb-4">
+    <p>El Método Simplex es un algoritmo de optimización utilizado para resolver problemas de programación lineal.
+    Su objetivo es encontrar la mejor solución (máximo o mínimo) para una función lineal sujeta a un conjunto de restricciones.</p>
+  </div>
+
+  <h4 class="text-success">Características principales:</h4>
+  <ul class="list-group mb-4">
+    <li class="list-group-item">Trabaja con funciones lineales.</li>
+    <li class="list-group-item">Las restricciones también deben ser igualdades o desigualdades lineales.</li>
+    <li class="list-group-item">La solución óptima se encuentra en alguno de los vértices de la región factible.</li>
+  </ul>
+
+  <h4 class="text-success">Pasos generales del método:</h4>
+  <ol class="list-group list-group-numbered mb-4">
+    <li class="list-group-item">Plantear la función objetivo (a maximizar o minimizar).</li>
+    <li class="list-group-item">Escribir las restricciones del problema.</li>
+    <li class="list-group-item">Convertir las restricciones en igualdades agregando variables de holgura o exceso.</li>
+    <li class="list-group-item">Construir la tabla inicial del método simplex.</li>
+    <li class="list-group-item">Aplicar iteraciones: identificar la variable que entra y la que sale de la base.</li>
+    <li class="list-group-item">Repetir hasta alcanzar el óptimo.</li>
+    <li class="list-group-item">Leer la solución desde la tabla final.</li>
+  </ol>
+
+  <hr class="my-4">
+
+  <h3 class="text-primary fw-semibold">1. Planteamiento del Problema</h3>
+  <p><strong>Maximizar:</strong> \( Z = 4x_1 + 6x_2 \)</p>
+  <p><strong>Sujeto a:</strong></p>
+  <ul class="list-group mb-4">
+    <li class="list-group-item">\( 2x_1 + x_2 \leq 6 \)</li>
+    <li class="list-group-item">\( x_1 + 2x_2 \leq 8 \)</li>
+    <li class="list-group-item">\( x_1, x_2 \geq 0 \)</li>
+  </ul>
+
+  <h3 class="text-primary fw-semibold">2. Forma Estándar</h3>
+  <p>Agregamos variables de holgura \( s_1 \) y \( s_2 \):</p>
+  <ul class="list-group mb-4">
+    <li class="list-group-item">\( 2x_1 + x_2 + s_1 = 6 \)</li>
+    <li class="list-group-item">\( x_1 + 2x_2 + s_2 = 8 \)</li>
+  </ul>
+  <p>Función objetivo: \( Z - 4x_1 - 6x_2 = 0 \)</p>
+
+  <h3 class="text-primary fw-semibold mt-5">3. Tabla Inicial del Método Simplex</h3>
+  <div class="table-responsive">
+  <table class="table table-bordered table-sm text-center align-middle">
+    <thead class="table-success">
+      <tr>
+        <th>Base</th>
+        <th>\( x_1 \)</th>
+        <th>\( x_2 \)</th>
+        <th>\( s_1 \)</th>
+        <th>\( s_2 \)</th>
+        <th>Bj</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>\( s_1 \)</td>
+        <td>2</td>
+        <td>1</td>
+        <td>1</td>
+        <td>0</td>
+        <td>6</td>
+      </tr>
+      <tr>
+        <td>\( s_2 \)</td>
+        <td>1</td>
+        <td>2</td>
+        <td>0</td>
+        <td>1</td>
+        <td>8</td>
+      </tr>
+      <tr>
+        <td>Z</td>
+        <td>-4</td>
+        <td>-6</td>
+        <td>0</td>
+        <td>0</td>
+        <td>0</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+
+  <h3 class="text-primary fw-semibold mt-5">4. Iteración 1</h3>
+  <p><strong>Variable entrante:</strong> \( x_2 \) (mayor negativo en Z: -6)</p>
+  <p><strong>Razones:</strong></p>
+  <ul class="list-group mb-4">
+    <li class="list-group-item">\( 6 / 1 = 6 \)</li>
+    <li class="list-group-item">\( 8 / 2 = 4 \rightarrow \) entra \( x_2 \), sale \( s_2 \)</li>
+  </ul>
+
+  <h4 class="text-success">Tabla después de Iteración 1</h4>
+  <div class="table-responsive">
+  <table class="table table-bordered table-sm text-center align-middle">
+    <thead class="table-success">
+      <tr>
+        <th>Base</th>
+        <th>\( x_1 \)</th>
+        <th>\( x_2 \)</th>
+        <th>\( s_1 \)</th>
+        <th>\( s_2 \)</th>
+        <th>Bj</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>\( s_1 \)</td>
+        <td>1.5</td>
+        <td>0</td>
+        <td>1</td>
+        <td>-0.5</td>
+        <td>2</td>
+      </tr>
+      <tr>
+        <td>\( x_2 \)</td>
+        <td>0.5</td>
+        <td>1</td>
+        <td>0</td>
+        <td>0.5</td>
+        <td>4</td>
+      </tr>
+      <tr>
+        <td>Z</td>
+        <td>-1</td>
+        <td>0</td>
+        <td>0</td>
+        <td>3</td>
+        <td>24</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3 class="text-primary fw-semibold mt-5">5. Iteración 2</h3>
+  <p><strong>Variable entrante:</strong> \( x_1 \) (negativo en Z: -1)</p>
+  <p><strong>Razones:</strong></p>
+  <ul class="list-group mb-4">
+    <li class="list-group-item">\( 2 / 1.5 \approx 1.33 \)</li>
+    <li class="list-group-item">\( 4 / 0.5 = 8 \rightarrow \) sale \( s_1 \)</li>
+  </ul>
+
+  <h4 class="text-success">Tabla después de Iteración 2</h4>
+  <div class="table-responsive">
+  <table class="table table-bordered table-sm text-center align-middle">
+    <thead class="table-success">
+      <tr>
+        <th>Base</th>
+        <th>\( x_1 \)</th>
+        <th>\( x_2 \)</th>
+        <th>\( s_1 \)</th>
+        <th>\( s_2 \)</th>
+        <th>Bj</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>\( x_1 \)</td>
+        <td>1</td>
+        <td>0</td>
+        <td>0.67</td>
+        <td>-0.33</td>
+        <td>1.33</td>
+      </tr>
+      <tr>
+        <td>\( x_2 \)</td>
+        <td>0</td>
+        <td>1</td>
+        <td>-0.33</td>
+        <td>0.67</td>
+        <td>3.33</td>
+      </tr>
+      <tr>
+        <td>Z</td>
+        <td>0</td>
+        <td>0</td>
+        <td>2</td>
+        <td>2</td>
+        <td>26</td>
+      </tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3 class="text-primary fw-semibold mt-5">6. Solución Óptima</h3>
+  <ul class="list-group mb-4">
+    <li class="list-group-item">\( x_1 = 1.33 \)</li>
+    <li class="list-group-item">\( x_2 = 3.33 \)</li>
+    <li class="list-group-item fw-bold">\( Z = 26 \)</li>
+  </ul>
+
+  <h3 class="text-primary fw-semibold">7. Gráfica (opcional)</h3>
+  <div class="bg-white border-start border-4 border-info p-3 rounded">
+    <p>Se puede graficar la región factible y marcar el punto óptimo \( (1.33, 3.33) \) si se desea.</p>
+  </div>
+{% endblock %}

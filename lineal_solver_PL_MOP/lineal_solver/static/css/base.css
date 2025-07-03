@@ -58,3 +58,74 @@ main {
     padding-bottom: 1rem;
     font-size: 1rem;
 }
+
+/* Botones de traducción - Esquina inferior derecha */
+.translate-buttons {
+    position: fixed;
+    right: 20px;
+    bottom: 20px;
+    z-index: 1000;
+}
+
+.btn-translate {
+    border: none;
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 10px 20px;
+    border-radius: 0;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    width: 120px;
+}
+
+.btn-translate-es {
+    background-color: var(--color-oscuro);
+    border-top-left-radius: 10px !important;
+    border-top-right-radius: 10px !important;
+}
+
+.btn-translate-en {
+    background-color: var(--color-blanco);
+}
+
+.btn-translate-fr {
+    background-color: var(--color-primario);
+    border-bottom-left-radius: 10px !important;
+    border-bottom-right-radius: 10px !important;
+}
+
+.btn-translate:hover {
+    transform: translateX(-5px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    opacity: 0.9;
+}
+
+.btn-translate i {
+    font-size: 1.2rem;
+}
+
+/* Efecto al activar */
+.btn-translate:active {
+    transform: scale(0.95);
+}
+
+/* Oculta el contenedor de calificar la traducción */
+.goog-te-gadget img{
+    display:none !important;
+}
+body > .skiptranslate {
+    display: none;
+}
+body {
+    top: 0px !important;
+}
+.VIpgJd-yAWNEb-hvhgNd,
+.goog-te-banner-frame,
+#goog-gt-tt,
+.goog-te-balloon-frame,
+.goog-text-highlight {
+  display: none !important;
+}

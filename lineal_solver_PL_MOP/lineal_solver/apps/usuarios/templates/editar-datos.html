@@ -1,0 +1,99 @@
+
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Perfil{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/datosPersonales.css' %}">
+{% endblock %}
+
+{% block navbar_content %}
+{% include "bases/navbar.html" %}
+{% endblock navbar_content %}
+{% block footer_content %}
+{% include "bases/footer.html" %}
+{% endblock footer_content %}
+
+{% block section_content %}
+<div class="container py-2">
+  <div class="row justify-content-center">
+    <div class="col-md-8">
+      <div class="card shadow p-2">
+       <div class="container mt-">
+  <h2>Editar Perfil</h2>
+
+
+
+  <form method="post" enctype="multipart/form-data">
+  {% csrf_token %}
+
+  {% if form.non_field_errors %}
+  <div class="alert alert-danger">
+    {% for error in form.non_field_errors %}
+      <div>{{ error }}</div>
+    {% endfor %}
+  </div>
+{% endif %}
+
+  
+  <div class="mb-3">
+    <label for="id_first_name" class="form-label">Nombre</label>
+    {{ form.first_name }}
+  </div>
+
+  <div class="mb-3">
+    <label for="id_last_name" class="form-label">Apellido</label>
+    {{ form.last_name }}
+  </div>
+
+  <!-- Campos del modelo PerfilUsuario -->
+  <div class="mb-3">
+    <label for="id_imagen" class="form-label">Imagen de perfil</label>
+    {{ form.imagen }}
+  </div>
+
+  <div class="mb-3">
+  <label for="id_telefono" class="form-label">Teléfono</label>
+  {{ form.telefono }}
+  {% if form.telefono.errors %}
+    <div class="text-danger">
+      {{ form.telefono.errors.0 }}
+    </div>
+  {% endif %}
+</div>
+
+  <div class="mb-3">
+    <label for="id_ciudad" class="form-label">Ciudad</label>
+    {{ form.ciudad }}
+  </div>
+  <div class="mb-3">
+    <label for="id_fecha_nacimiento" class="form-label">Fecha de nacimiento</label>
+    {{ form.fecha_nacimiento }}
+  </div>
+  <div class="mb-3">
+    <label for="id_direccion" class="form-label">Dirección</label>
+    {{ form.direccion }}
+  </div>
+  <div class="mb-3">
+  <label for="id_password" class="form-label">Contraseña actual</label>
+  {{ form.password }}
+  {% if form.password.errors %}
+    <div class="text-danger">
+      {{ form.password.errors.0 }}
+    </div>
+  {% endif %}
+</div>
+
+
+  <button type="submit" class="btn btn-primary">Guardar cambios</button>
+  <a href="{% url 'perfil' %}" class="btn btn-secondary">Cancelar</a>
+</form>
+
+
+</div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

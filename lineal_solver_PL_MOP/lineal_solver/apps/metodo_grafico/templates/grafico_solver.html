@@ -1,0 +1,125 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Método Gráfico{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="{% static 'css/simplex.css' %}">
+{% endblock %}
+
+
+{% block navbar_content %}
+{% include "bases/navbar.html" %}
+{% endblock %}
+{% block footer_content %}
+{% include "bases/footer.html" %}
+{% endblock %}
+
+{% block section_content %}
+<section class="contenedor-simplex bg-simplex py-5" id="features">
+  <h1 class="titulo-simplex">Método Gráfico</h1>
+  <form method="post" autocomplete="off">
+    {% csrf_token %}
+    <div class="contenedor-campos">
+      <div class="tipo-optimizacion">
+        <label>Tipo de optimización:</label>
+        <select class="input-campos" name="optim">
+          <option value="max">Maximizar</option>
+          <option value="min">Minimizar</option>
+        </select>
+      </div>
+
+      <div class="numero-variables">
+        <label>Número de variables:</label>
+        <input class="input-campos" id="n" name="n" type="number" min="2" max="2" value="2" readonly>
+      </div>
+
+      <div class="numero-restricciones">
+        <label>Número de restricciones:</label>
+        <input class="input-campos" id="m" name="m" type="number" min="1" max="10" value="2">
+      </div>
+
+      <button class="botones-simplex" type="button" onclick="generarCamposGrafico()">Generar campos</button>
+
+      <div id="campos-grafico"></div>
+
+      <div class="btn-resolver-limpiar">
+        <button class="botones-simplex btn-resolver contenedor-oculto" type="submit">Resolver</button>
+        <button class="botones-simplex btn-limpiar contenedor-oculto" type="button" onclick="limpiarFormularioGrafico()">Limpiar</button>
+      </div>
+    </div>
+  </form>
+
+  {% if paso_a_paso %}
+    <div class="box-solution">
+      <h2 class="box-solution-titulo">Procedimiento paso a paso</h2>
+      <ol class="paso-a-paso-lista">
+        {% for paso in paso_a_paso %}
+          <li class="paso-a-paso-item">
+            <div class="paso-a-paso-titulo"><strong>{{ paso.titulo }}</strong></div>
+            <ul class="paso-a-paso-detalle">
+              {% if paso.contenido is iterable and not paso.contenido.items %}
+                {% for item in paso.contenido %}
+                  {% if item.items %}
+                    <li>
+                      {% for k, v in item.items %}
+                        <span class="paso-a-paso-label"><strong>{{ k }}:</strong></span>
+                        <span class="paso-a-paso-valor">{% if v|stringformat:"s"|slice:":2" == "\\(" or v|stringformat:"s"|slice:":2" == "\\[" %}{{ v|safe }}{% else %}{{ v }}{% endif %}</span>
+                      {% endfor %}
+                    </li>
+                  {% else %}
+                    <li>{% if item|stringformat:"s"|slice:":2" == "\\(" or item|stringformat:"s"|slice:":2" == "\\[" %}{{ item|safe }}{% else %}{{ item }}{% endif %}</li>
+                  {% endif %}
+                {% endfor %}
+              {% elif paso.contenido.items %}
+                {% for k, v in paso.contenido.items %}
+                  <li>
+                    <span class="paso-a-paso-label"><strong>{{ k }}:</strong></span>
+                    <span class="paso-a-paso-valor">{% if v|stringformat:"s"|slice:":2" == "\\(" or v|stringformat:"s"|slice:":2" == "\\[" %}{{ v|safe }}{% else %}{{ v }}{% endif %}</span>
+                  </li>
+                {% endfor %}
+              {% else %}
+                <li>{% if paso.contenido|stringformat:"s"|slice:":2" == "\\(" or paso.contenido|stringformat:"s"|slice:":2" == "\\[" %}{{ paso.contenido|safe }}{% else %}{{ paso.contenido }}{% endif %}</li>
+              {% endif %}
+            </ul>
+          </li>
+        {% endfor %}
+      </ol>
+    </div>
+  {% endif %}
+
+  <div id="resultado-wrapper">
+    {% if resultado and resultado.optimo %}
+      <div class="box-solution">
+        <h2 class="box-solution-titulo">Solución óptima</h2>
+        <ul>
+          <li>x = {{ resultado.optimo.x|floatformat:4 }}</li>
+          <li>y = {{ resultado.optimo.y|floatformat:4 }}</li>
+        </ul>
+        <p><strong>Z = {{ resultado.optimo.z|floatformat:4 }}</strong></p>
+      </div>
+
+      <div class="box-solution">
+        <h2 class="box-solution-titulo">Gráfica</h2>
+        <button id="download-png" class="botones-simplex" type="button">Descargar PNG</button>        
+        <div id="grafico" style="width:100%;min-width:800px;height:600px;"></div>
+
+        {% block extra_scripts %}
+        <script src="{% static 'js/grafico.js' %}"></script>
+        <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+        <script>
+          const vertices = JSON.parse('{{ vertices|escapejs }}');
+          const optimo = JSON.parse('{{ optimo|escapejs }}');
+          renderGraficoSolver(vertices, optimo);
+        </script>
+        {% endblock %}
+        
+      </div>
+      {% elif resultado and resultado.error %}
+      <div class="error-box">
+        <strong>Error:</strong> {{ resultado.error }}
+      </div>
+      {% endif %}
+  </div>
+</section>
+{% endblock %}

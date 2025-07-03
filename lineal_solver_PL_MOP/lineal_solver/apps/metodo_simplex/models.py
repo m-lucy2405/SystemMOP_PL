@@ -1,7 +1,8 @@
 from django.db import models
-from django.contrib.postgres.fields import ArrayField
+from django.contrib.auth.models import User
 
 class SimplexProblem(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='problemas_simplex')
     TIPO_CHOICES = [('max', 'Maximizar'), ('min', 'Minimizar')]
     optim = models.CharField(max_length=3, choices=TIPO_CHOICES)
     n = models.PositiveIntegerField()

@@ -31,6 +31,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # Middleware for serving static files in production
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -118,6 +119,16 @@ STATIC_URL = '/static/'
 # Static root directory for collecting static files
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
+# Static files storage configuration
+# Using Whitenoise for serving static files in production
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+# Additional directories to look for static files
+
+STATICFILES_DIRS = [    
+    os.path.join(BASE_DIR, 'static'),
+]
+
 # Media files (User-uploaded content)
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -144,5 +155,15 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     },
+]
+
+# Adjust the URLs as needed for your local and production environments
+CSRF_TRUSTED_ORIGINS = ['https://systemmoppl-production.up.railway.app']
+
+# CSRF_TRUSTED_ORIGINS for local development and production
+CSRF_TRUSTED_ORIGINS = [
+    'https://systemmoppl-production.up.railway.app',
+    'http://localhost:8000',
+    'http://127.0.0.1:8000'
 ]
 
